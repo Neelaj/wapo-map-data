@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+
+var through = require('through2')
+var geojsonStream = require('geojson-stream')
+var area = require('turf-area')
+
+process.stdin.pipe(geojsonStream.parse())
+.pipe(through.obj(write, end))
+.pipe(process.stdout)
+
+var sum = 0
+
+function write (feat, _, next) {
+  var A = area(feat)
+  if (A > 0) { sum += A }
+  next()
+}
+
+function end (cb) {
+  this.push(String(sum))
+  cb()
+}

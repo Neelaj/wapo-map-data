@@ -984,6 +984,21 @@ geojson/albers/%.geojson: geojson/%.geojson
 		| ./geojson-id id \
 		> $@
 
+geojson/albers/relative-area.csv: geojson/albers/us-10m
+	$(eval TOTAL_AREA = \
+		$(shell cat geojson/albers/us-10m/states.geojson \
+			| ./reproject-geojson --projection mercator --reverse \
+			| ./sum-area))
+	cat geojson/albers/us-10m/states.geojson \
+		| ./reproject-geojson --projection mercator --reverse \
+		| ./calculate-area id --normalize $(TOTAL_AREA) --precision 6 >> $@
+	cat geojson/albers/us-10m/counties.geojson \
+		| ./reproject-geojson --projection mercator --reverse \
+		| ./calculate-area id --normalize $(TOTAL_AREA) --precision 6 >> $@
+	cat geojson/albers/us-10m/districts.geojson \
+		| ./reproject-geojson --projection mercator --reverse \
+		| ./calculate-area id --normalize $(TOTAL_AREA) --precision 6 >> $@
+
 # Separate asset needed by wapo-components
 geojson/albers/state-bounds.json: geojson/albers/states.geojson
 	cat $^ | ./extract-projected-bounds > $@
@@ -1115,8 +1130,8 @@ tiles/z5-12.mbtiles: geojson/albers/states.geojson \
 		--name=2016-us-election \
 		--output $@
 
-tiles/wapo-2016-election.mbtiles: tiles/z0-4.mbtiles tiles/z5-12.mbtiles
-	tile-join -f -o $@ $^
+tiles/wapo-2016-election.mbtiles: geojson/albers/relative-area.csv tiles/z0-4.mbtiles tiles/z5-12.mbtiles
+	tile-join -f -o $@ -c geojson/albers/relative-area.csv tiles/z0-4.mbtiles tiles/z5-12.mbtiles
 
 tiles/wapo-2016-election-development.mbtiles: tiles/wapo-2016-election.mbtiles
 	cp $^ $@

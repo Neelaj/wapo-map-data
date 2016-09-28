@@ -1,0 +1,29 @@
+#!/usr/bin/env node
+
+var through = require('through2')
+var geojsonStream = require('geojson-stream')
+var area = require('turf-area')
+var argv = require('minimist')(process.argv.slice(2))
+
+var areas = {}
+
+process.stdin.pipe(geojsonStream.parse())
+.on('data', function (feat) {
+  var A = round(area(feat) / (argv.normalize || 1))
+  areas[feat.properties.id] = areas[feat.properties.id] || 0
+  areas[feat.properties.id] += A
+})
+.on('end', function () {
+  console.log('id,area')
+  for (var id in areas) {
+    console.log(id + ',' + areas[id])
+  }
+})
+
+let precision = argv.precision || (argv.normalize ? 2 : 0)
+let precisionMultiplier = Math.pow(10, precision)
+
+function round (value) {
+  return Math.ceil(value * precisionMultiplier) / precisionMultiplier
+}
+
