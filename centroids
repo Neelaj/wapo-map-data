@@ -13,19 +13,15 @@ process.stdin.pipe(geojsonStream.parse())
 function write (feat, _, next) {
   if (feat.geometry.coordinates.length) {
     var center
+    var precision = feat.properties.id === '02' ? 500 : 1
+
     if (feat.geometry.type === 'Polygon') {
-      center = polylabel(feat.geometry.coordinates, 1.0)
+      center = polylabel(feat.geometry.coordinates, precision)
     } else if (feat.geometry.type === 'MultiPolygon') {
-      // it's still non-contiguous, use polylabel on the largest polygon
-      var precision = feat.properties.id === '02' ? 500 : 1
-      if (feat.geometry.type === 'MultiPolygon') {
-        let sorted = feat.geometry.coordinates.sort((a, b) => {
-          return turf.area(turf.polygon(a)) > turf.area(turf.polygon(b)) ? -1 : 1
-        })
-        center = polylabel(sorted[0], precision)
-      } else {
-        center = polylabel(feat.geometry.coordinates, precision)
-      }
+      let sorted = feat.geometry.coordinates.sort((a, b) => {
+        return turf.area(turf.polygon(a)) > turf.area(turf.polygon(b)) ? -1 : 1
+      })
+      center = polylabel(sorted[0], precision)
     }
     var dx = turf.distance(turf.point(center),
       turf.point([center[0] + center.distance, center[1]]))
