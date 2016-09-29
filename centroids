@@ -13,33 +13,27 @@ process.stdin.pipe(geojsonStream.parse())
 function write (feat, _, next) {
   if (feat.geometry.coordinates.length) {
     var center
+    var precision = feat.properties.id === '02' ? 500 : 1
+
     if (feat.geometry.type === 'Polygon') {
-      center = polylabel(feat.geometry.coordinates, 1.0)
+      center = polylabel(feat.geometry.coordinates, precision)
     } else if (feat.geometry.type === 'MultiPolygon') {
-
-      // first, try to combine the multi-polygon into a polygon
-      var combined = turf.polygon(feat.geometry.coordinates[0])
-      feat.geometry.coordinates.slice(1).forEach(function (coord) {
-        combined = turf.union(combined, turf.polygon(coord))
+      let sorted = feat.geometry.coordinates.sort((a, b) => {
+        return turf.area(turf.polygon(a)) > turf.area(turf.polygon(b)) ? -1 : 1
       })
-
-      // it's still non-contiguous, use polylabel on the largest polygon
-      if (combined.geometry.type === 'MultiPolygon') {
-        let sorted = combined.geometry.coordinates.sort((a, b) => {
-          return turf.area(turf.polygon(a)) > turf.area(turf.polygon(b)) ? -1 : 1
-        })
-        center = polylabel(sorted[0], 1.0)
-      } else {
-        center = polylabel(combined.geometry.coordinates, 1.0)
-      }
+      center = polylabel(sorted[0], precision)
     }
+    var dx = turf.distance(turf.point(center),
+      turf.point([center[0] + center.distance, center[1]]))
+    var dy = turf.distance(turf.point(center),
+      turf.point([center[0], center[1] + center.distance]))
     this.push({
       type: 'Feature',
       id: feat.id,
-      properties: { id: feat.id },
+      properties: { id: feat.properties.id, dx: dx, dy: dy },
       geometry: {
         'type': 'Point',
-        'coordinates': center
+        'coordinates': [center[0], center[1]]
       }
     })
   }
