@@ -860,7 +860,7 @@ all-pop-blocks:
 # National combined (states)
 topo/us-combined.json: geojson/states.geojson
 	node_modules/.bin/topojson \
-		-o temp.json \
+		-o us-combined-temp.json \
 		--no-pre-quantization \
 		--post-quantization=1e6 \
 		--simplify=7e-6 \
@@ -874,8 +874,8 @@ topo/us-combined.json: geojson/states.geojson
 		--post-quantization=1e6 \
 		--id-property=postal \
 		--properties postal \
-		-- temp.json
-	rm temp.json
+		-- us-combined-temp.json
+	rm us-combined-temp.json
 
 topo/us-northeast-combined.json: geojson/northeast/states.geojson
 	node_modules/.bin/topojson \
@@ -929,37 +929,37 @@ geojson/%/counties.geojson: topo/us-%-counties-10m.json
 geojson/states.geojson: shp/us/states.shp
 	mkdir -p $(dir $@)
 	rm -f $@
-	ogr2ogr -f "GeoJSON" $(dir $@)temp.json $<
-	cat $(dir $@)temp.json | ./clip-at-dateline > $@
-	rm $(dir $@)temp.json
+	ogr2ogr -f "GeoJSON" $(dir $@)states-temp.json $<
+	cat $(dir $@)states-temp.json | ./clip-at-dateline > $@
+	rm $(dir $@)states-temp.json
 
 geojson/counties.geojson: shp/us/counties.shp
 	mkdir -p $(dir $@)
 	rm -f $@
-	ogr2ogr -f "GeoJSON" $(dir $@)temp.json $<
-	cat $(dir $@)temp.json | ./clip-at-dateline > $@
-	rm $(dir $@)temp.json
+	ogr2ogr -f "GeoJSON" $(dir $@)counties-temp.json $<
+	cat $(dir $@)counties-temp.json | ./clip-at-dateline > $@
+	rm $(dir $@)counties-temp.json
 
 geojson/districts.geojson: shp/us/congress-clipped.shp
 	mkdir -p $(dir $@)
 	rm -rf $@
-	ogr2ogr -f "GeoJSON" $(dir $@)temp.json $<
-	cat $(dir $@)temp.json | ./clip-at-dateline | ./normalize-district > $@
-	rm $(dir $@)temp.json
+	ogr2ogr -f "GeoJSON" $(dir $@)districts-temp.json $<
+	cat $(dir $@)districts-temp.json | ./clip-at-dateline | ./normalize-district > $@
+	rm $(dir $@)districts-temp.json
 
 geojson/us-10m: geojson/counties.geojson geojson/districts.geojson geojson/states.geojson
 	mkdir -p $@
 	node_modules/.bin/topojson \
-		-o temp.json \
+		-o $(dir $@)temp.json \
 		--no-pre-quantization \
 		--post-quantization=1e6 \
 		--simplify=7e-7 \
 		--properties GEOID,STATE_FIPS,FIPS\
 		--external-properties fips.csv \
 		-- $^
-	node_modules/.bin/topojson-geojson -o $@ temp.json
+	node_modules/.bin/topojson-geojson -o $@ $(dir $@)temp.json
 	for f in $$(ls $@) ; do mv $@/$$f $@/$$(basename $$f .json).geojson; done
-	rm temp.json
+	rm $(dir $@)temp.json
 
 # Cities
 topo/us-%-cities.json: geojson/%/cities.geojson
@@ -984,20 +984,26 @@ geojson/albers/%.geojson: geojson/%.geojson
 		| ./geojson-id id \
 		> $@
 
+geojson/albers/us-10m: geojson/us-10m
+	make geojson/albers/us-10m/states.geojson
+	make geojson/albers/us-10m/counties.geojson
+	make geojson/albers/us-10m/districts.geojson
+
 geojson/albers/relative-area.csv: geojson/albers/us-10m
 	$(eval TOTAL_AREA = \
 		$(shell cat geojson/albers/us-10m/states.geojson \
 			| ./reproject-geojson --projection mercator --reverse \
 			| ./sum-area))
+	echo "id,area" > $@
 	cat geojson/albers/us-10m/states.geojson \
 		| ./reproject-geojson --projection mercator --reverse \
-		| ./calculate-area id --normalize $(TOTAL_AREA) --precision 6 >> $@
+		| ./calculate-area --normalize $(TOTAL_AREA) --precision 6 >> $@
 	cat geojson/albers/us-10m/counties.geojson \
 		| ./reproject-geojson --projection mercator --reverse \
-		| ./calculate-area id --normalize $(TOTAL_AREA) --precision 6 >> $@
+		| ./calculate-area --normalize $(TOTAL_AREA) --precision 6 >> $@
 	cat geojson/albers/us-10m/districts.geojson \
 		| ./reproject-geojson --projection mercator --reverse \
-		| ./calculate-area id --normalize $(TOTAL_AREA) --precision 6 >> $@
+		| ./calculate-area --normalize $(TOTAL_AREA) --precision 6 >> $@
 
 # Separate asset needed by wapo-components
 geojson/albers/state-bounds.json: geojson/albers/states.geojson
@@ -1141,10 +1147,10 @@ upload/%: tiles/%.mbtiles
 ifndef MapboxAccessToken
 	$(error MapboxAccessToken not defined)
 endif
-ifndef MB_ACCOUNT
-	$(error MB_ACCOUNT not defined)
+ifndef TILESET
+	$(error TILESET not defined)
 endif
-	node_modules/.bin/mapbox-upload $(MB_ACCOUNT).$* $^
+	node_modules/.bin/mapbox-upload $(TILESET) $^
 
 
 #

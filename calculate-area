@@ -14,7 +14,6 @@ process.stdin.pipe(geojsonStream.parse())
   areas[feat.properties.id] += A
 })
 .on('end', function () {
-  console.log('id,area')
   for (var id in areas) {
     console.log(id + ',' + areas[id])
   }
