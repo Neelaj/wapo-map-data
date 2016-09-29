@@ -33,7 +33,7 @@
     "get-stdin": "^5.0.1",
     "mapbox-upload": "^4.2.2",
     "minimist": "^1.2.0",
-    "polylabel": "^1.0.1",
+    "polylabel": "github:developmentseed/polylabel#401c1d9c589ea910bdd9603741665981d150056c",
     "reproject": "^1.1.1",
     "through2": "^2.0.1",
     "tile-index": "^1.0.0",

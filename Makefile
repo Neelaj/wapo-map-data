@@ -1014,7 +1014,10 @@ geojson/albers/tile-index.json: geojson/albers/us-10m
 	cat $^/*.geojson | ./reproject-geojson --projection mercator --reverse | node_modules/.bin/tile-index -z 7 -f indexed > $@
 
 geojson/albers/centroid-%: geojson/albers/%
-	cat $^ | ./centroids > $@
+	cat $^ \
+		| ./reproject-geojson --projection mercator --reverse \
+		| ./centroids \
+		| ./reproject-geojson --projection mercator > $@
 
 geojson/albers/state-labels-dataset.geojson:
 	curl "https://api.mapbox.com/datasets/v1/devseed/cis7wq7mj04l92zpk9tbk9wgo/features?access_token=$(MapboxAccessToken)" > $@
