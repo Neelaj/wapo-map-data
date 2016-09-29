@@ -9,21 +9,27 @@ include Makefile-shp.mk
 geojson/states.geojson: shp/us/states.shp
 	mkdir -p $(dir $@)
 	rm -f $@
-	ogr2ogr -f "GeoJSON" $(dir $@)states-temp.json $<
+	ogr2ogr -f "GeoJSON" $(dir $@)states-temp.json $< \
+		-dialect sqlite -sql \
+		"select ST_union(Geometry),STATE_FIPS from states GROUP BY STATE_FIPS"
 	cat $(dir $@)states-temp.json | ./clip-at-dateline > $@
 	rm $(dir $@)states-temp.json
 
 geojson/counties.geojson: shp/us/counties.shp
 	mkdir -p $(dir $@)
 	rm -f $@
-	ogr2ogr -f "GeoJSON" $(dir $@)counties-temp.json $<
+	ogr2ogr -f "GeoJSON" $(dir $@)counties-temp.json $< \
+		-dialect sqlite -sql \
+		"select ST_union(Geometry),STATE_FIPS,FIPS from counties GROUP BY STATE_FIPS,FIPS"
 	cat $(dir $@)counties-temp.json | ./clip-at-dateline > $@
 	rm $(dir $@)counties-temp.json
 
 geojson/districts.geojson: shp/us/congress-clipped.shp
 	mkdir -p $(dir $@)
 	rm -rf $@
-	ogr2ogr -f "GeoJSON" $(dir $@)districts-temp.json $<
+	ogr2ogr -f "GeoJSON" $(dir $@)districts-temp.json $< \
+		-dialect sqlite -sql \
+		"select ST_union(Geometry),GEOID from 'congress-clipped' GROUP BY GEOID"
 	cat $(dir $@)districts-temp.json | ./clip-at-dateline | ./normalize-district > $@
 	rm $(dir $@)districts-temp.json
 
@@ -87,6 +93,14 @@ geojson/albers/centroid-%: geojson/albers/%
 		| ./reproject-geojson --projection mercator --reverse \
 		| ./centroids \
 		| ./reproject-geojson --projection mercator > $@
+
+# Separate asset needed by wapo-components
+geojson/albers/centroid-radius-data.json: geojson/albers/centroid-states.geojson \
+	geojson/albers/centroid-districts.geojson \
+	geojson/albers/centroid-counties.geojson
+	cat $^ \
+		| jq '.features[].properties' | jq -s . \
+		> $@
 
 geojson/albers/state-labels-dataset.geojson:
 	curl "https://api.mapbox.com/datasets/v1/devseed/cis7wq7mj04l92zpk9tbk9wgo/features?access_token=$(MapboxAccessToken)" > $@
@@ -210,9 +224,6 @@ tiles/z5-12.mbtiles: geojson/albers/states.geojson \
 
 tiles/wapo-2016-election.mbtiles: geojson/albers/relative-area.csv tiles/z0-4.mbtiles tiles/z5-12.mbtiles
 	tile-join -f -o $@ -c geojson/albers/relative-area.csv tiles/z0-4.mbtiles tiles/z5-12.mbtiles
-
-tiles/wapo-2016-election-development.mbtiles: tiles/wapo-2016-election.mbtiles
-	cp $^ $@
 
 # Usage:
 # TILESET=accountname.tilesetname make upload/tiles-filename

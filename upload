@@ -5,9 +5,11 @@ FILENAME=$2
 BUCKET="wapo-election-private-config"
 KEY="backup/tiles/$TILESET.mbtiles"
 
-if aws s3api head-object --bucket $BUCKET --key $KEY; then
-  echo $KEY already exists in S3 bucket $BUCKET. Aborting.
-  exit 1
+if [[ -z $FORCE_UPLOAD ]]; then
+  if aws s3api head-object --bucket $BUCKET --key $KEY; then
+    echo $KEY already exists in S3 bucket $BUCKET. Aborting.
+    exit 1
+  fi
 fi
 
 node_modules/.bin/mapbox-upload $TILESET $FILENAME
