@@ -1460,8 +1460,9 @@
     }
   </script>
   <script>
-    var R = 6378137.0 / 4
-    var proj = d3.geo.mercator().translate([0, 0]).scale(R)
+    var R = 6378137.0 // radius of Earth in meters
+    var proj = d3.geo.mercator().translate([836.606 / 2, -502.104 / 2])
+    proj.scale(R)
 
     var labelContainer = document.getElementById('labels')
     var labels = Array.prototype.slice.call(labelContainer.getElementsByTagName('text'), 0)
@@ -1516,8 +1517,8 @@
 
     }
     document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(electoralUnits))
-    // document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(boundaries))
-    // document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(labelFeatures))
+    document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(boundaries))
+    document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(labelFeatures))
 
     function getPoints (path) {
       var d = path.getAttribute('d')

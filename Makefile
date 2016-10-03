@@ -102,6 +102,19 @@ geojson/albers/centroid-radius-data.json: geojson/albers/centroid-states.geojson
 		| jq '.features[].properties' | jq -s . \
 		> $@
 
+geojson/cartogram/%.geojson: data/cartogram/%.geojson
+	mkdir -p $(dir $@)
+	cat $^ \
+		| ./reproject-geojson --projection mercator \
+		| ./add-geojson-id id \
+		> $@
+
+geojson/cartogram:
+	rm -rf geojson/cartogram
+	make geojson/cartogram/boundaries.geojson
+	make geojson/cartogram/electoral-units.geojson
+	make geojson/cartogram/labels.geojson
+
 geojson/albers/state-labels-dataset.geojson:
 	curl "https://api.mapbox.com/datasets/v1/devseed/cis7wq7mj04l92zpk9tbk9wgo/features?access_token=$(MapboxAccessToken)" > $@
 
@@ -170,6 +183,21 @@ tiles/wapo-2016-election-centroids.mbtiles: geojson/albers/centroid-states.geojs
 		--no-polygon-splitting \
 		--drop-rate=0 \
 		--name=2016-us-election-centroids \
+		--output $@
+
+tiles/wapo-2016-election-cartogram.mbtiles: geojson/cartogram/electoral-units.geojson \
+	geojson/cartogram/boundaries.geojson \
+	geojson/cartogram/labels.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=electoral:geojson/cartogram/electoral-units.geojson \
+		--named-layer=boundaries:geojson/cartogram/boundaries.geojson \
+		--named-layer=labels:geojson/cartogram/labels.geojson \
+		--read-parallel \
+		--no-polygon-splitting \
+		--drop-rate=0 \
+		--name=2016-us-election-cartogram \
 		--output $@
 
 tiles/wapo-2016-election-city-labels.mbtiles: geojson/albers/city-labels.geojson
