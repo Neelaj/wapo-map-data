@@ -1460,10 +1460,6 @@
     }
   </script>
   <script>
-    var R = 6378137.0 // radius of Earth in meters
-    var proj = d3.geo.mercator().translate([836.606 / 2, -502.104 / 2])
-    proj.scale(R)
-
     var labelContainer = document.getElementById('labels')
     var labels = Array.prototype.slice.call(labelContainer.getElementsByTagName('text'), 0)
     var electoralUnits = []
@@ -1481,8 +1477,7 @@
       var matrix = /\(([^)]+)\)/.exec(transform)
       var separated = matrix[1].split(' ')
       var xy = separated.slice(separated.length - 2)
-      var labelCoords = getCoords([xy])
-      labelFeatures.push(turf.point(labelCoords[0], {
+      labelFeatures.push(turf.point(xy, {
         statePostal: statePostal,
         id: fips,
         text: labelDomObj.textContent
@@ -1491,7 +1486,7 @@
       // outside bounds to calculate centroids, for the label
       var border = document.getElementById(id + '_2_')
       if (border) {
-        var borderBounds = getCoords(getPoints(border))
+        var borderBounds = getPoints(border)
         if (JSON.stringify(borderBounds[0]) !== JSON.stringify(borderBounds[borderBounds.length - 1])) {
           borderBounds.push.apply(borderBounds, borderBounds.slice(0, 1))
         }
@@ -1507,7 +1502,7 @@
       electoralVotes.map(getPoints).map((points) => {
         // the electoral boundaries are translated by (20, 20)
         return points.map((point) => [point[0] + 20, point[1] + 20])
-      }).map(getCoords).forEach((coords, i) => {
+      }).forEach((coords, i) => {
         electoralUnits.push(turf.polygon([coords], {
           statePostal: statePostal,
           fips: fips,
@@ -1516,8 +1511,8 @@
       })
 
     }
-    document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(electoralUnits))
-    document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(boundaries))
+    // document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(electoralUnits))
+    // document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(boundaries))
     document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(labelFeatures))
 
     function getPoints (path) {
@@ -1525,12 +1520,6 @@
       var abs = Raphael._pathToAbsolute(d)
       return abs.slice(0, -1).map((move) => move.slice(1))
     }
-
-    function getCoords (points) {
-      return points.map(proj.invert)
-    }
-
-
   </script>
   </body>
 </html>
