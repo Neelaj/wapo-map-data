@@ -105,7 +105,7 @@
 		<path fill="#D1D3D4" stroke="#FFFFFF" stroke-width="0.8" stroke-opacity="0.5" d="M329.692,26.069l-13.423,13.424l13.423,13.425
 			l13.424-13.425L329.692,26.069z"/>
 	</g>
-	<g id="id">
+	<g id="id_1_">
 		<path fill="#D1D3D4" stroke="#FFFFFF" stroke-width="0.8" stroke-opacity="0.5" d="M220.389,160.793l-13.424,13.423l13.424,13.424
 			l13.424-13.424L220.389,160.793z"/>
 		<path fill="#D1D3D4" stroke="#FFFFFF" stroke-width="0.8" stroke-opacity="0.5" d="M206.726,147.32l-13.424,13.424l13.424,13.423
@@ -1332,7 +1332,7 @@
 	<text id="sd" transform="matrix(1 0 0 1 286.8413 146.1416)" font-family="'FranklinITCStd-Light'" font-size="10">S.D.</text>
 	<text id="wy" transform="matrix(1 0 0 1 256.3994 173.085)" font-family="'FranklinITCStd-Light'" font-size="10">Wyo.</text>
 	<text id="wi" transform="matrix(1 0 0 1 354.9492 92.251)" font-family="'FranklinITCStd-Light'" font-size="10">Wis.</text>
-	<text id="id_1_" transform="matrix(1 0 0 1 217.6221 186.5586)" font-family="'FranklinITCStd-Light'" font-size="10">Idaho</text>
+	<text id="id" transform="matrix(1 0 0 1 217.6221 186.5586)" font-family="'FranklinITCStd-Light'" font-size="10">Idaho</text>
 	<text id="vt" transform="matrix(1 0 0 1 703.3477 38.3628)" font-family="'FranklinITCStd-Light'" font-size="10">Vt.</text>
 	<text id="mn" transform="matrix(1 0 0 1 321.9805 146.1416)" font-family="'FranklinITCStd-Light'" font-size="10">Minn.</text>
 	<text id="or" transform="matrix(1 0 0 1 143.2451 152.8774)" font-family="'FranklinITCStd-Light'" font-size="10">Ore.</text>
