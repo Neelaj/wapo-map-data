@@ -32,6 +32,8 @@ if (!argv.projection || argv.projection === 'albers') {
   proj = d3.geoAlbersUsa().scale(2 * Math.PI * R)
 } else if (argv.projection === 'mercator') {
   proj = d3.geoMercator().translate([0, 0]).scale(R)
+} else if (argv.projection === 'svg-hack') {
+  proj = d3.geoMercator().translate([420, -250]).scale(840)
 } else {
   throw new Error('Unsupported projection ' + argv.projection)
 }
