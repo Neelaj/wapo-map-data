@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+
+var geojsonStream = require('geojson-stream')
+var through = require('through2')
+
+process.stdin.pipe(geojsonStream.parse())
+.pipe(through.obj(write))
+.pipe(geojsonStream.stringify())
+.pipe(process.stdout)
+
+function write (feature, _, next) {
+  invert(feature.geometry.coordinates)
+  this.push(feature)
+  next()
+}
+
+var d3 = require('d3-geo')
+var proj = d3.geoMercator().translate([420, 235]).scale(720)
+
+function invert (coordinates) {
+  for (var k = 0, kk = coordinates.length; k < kk; ++k) {
+    for (var i = 0, ii = coordinates[k].length; i < ii; ++i) {
+      coordinates[k][i] = proj.invert(coordinates[k][i])
+    }
+  }
+}

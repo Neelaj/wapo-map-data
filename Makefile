@@ -105,12 +105,12 @@ geojson/albers/centroid-radius-data.json: geojson/albers/centroid-states.geojson
 geojson/cartogram/%.geojson: data/cartogram/%.geojson
 	mkdir -p $(dir $@)
 	cat $^ \
+		| ./invert-coordinates \
 		| ./reproject-geojson --projection mercator \
 		| ./add-geojson-id id \
 		> $@
 
 geojson/cartogram:
-	rm -rf geojson/cartogram
 	make geojson/cartogram/boundaries.geojson
 	make geojson/cartogram/electoral-units.geojson
 	make geojson/cartogram/labels.geojson
