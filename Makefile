@@ -107,7 +107,6 @@ geojson/cartogram/%.geojson: data/cartogram/%.geojson
 	cat $^ \
 		| ./invert-coordinates \
 		| ./reproject-geojson --projection mercator \
-		| ./add-geojson-id id \
 		> $@
 
 geojson/cartogram:

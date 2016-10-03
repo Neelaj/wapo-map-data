@@ -1506,14 +1506,14 @@
         electoralUnits.push(turf.polygon([coords], {
           statePostal: statePostal,
           fips: fips,
-          id: id + '-' + i
+          id: fips + '-' + i
         }))
       })
 
     }
-    // document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(electoralUnits))
+    document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(electoralUnits))
     // document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(boundaries))
-    document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(labelFeatures))
+    // document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(labelFeatures))
 
     function getPoints (path) {
       var d = path.getAttribute('d')
