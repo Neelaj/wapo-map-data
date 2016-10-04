@@ -29,7 +29,7 @@ geojson/districts.geojson: shp/us/congress-clipped.shp
 	rm -rf $@
 	ogr2ogr -f "GeoJSON" $(dir $@)districts-temp.json $< \
 		-dialect sqlite -sql \
-		"select ST_union(Geometry),GEOID from 'congress-clipped' GROUP BY GEOID"
+		"select ST_union(Geometry),GEOID,STATEFP from 'congress-clipped' GROUP BY GEOID"
 	cat $(dir $@)districts-temp.json | ./clip-at-dateline | ./normalize-district > $@
 	rm $(dir $@)districts-temp.json
 
