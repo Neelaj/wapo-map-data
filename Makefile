@@ -211,11 +211,15 @@ tiles/wapo-2016-election-city-labels.mbtiles: geojson/albers/city-labels.geojson
 		--output $@
 
 tiles/z0-4.mbtiles: geojson/albers/us-10m \
+	geojson/cartogram \
 	geojson/albers/state-labels.geojson \
 	geojson/albers/state-label-callouts.geojson
 	mkdir -p $(dir $@)
 	tippecanoe --projection EPSG:3857 \
 		-f \
+		--named-layer=electoral:geojson/cartogram/electoral-units.geojson \
+		--named-layer=cartolabels:geojson/cartogram/labels.geojson \
+		--named-layer=cartobounds:geojson/cartogram/boundaries.geojson \
 		--named-layer=states:geojson/albers/us-10m/states.geojson \
 		--named-layer=counties:geojson/albers/us-10m/counties.geojson \
 		--named-layer=districts:geojson/albers/us-10m/districts.geojson \
@@ -231,11 +235,15 @@ tiles/z0-4.mbtiles: geojson/albers/us-10m \
 tiles/z5-12.mbtiles: geojson/albers/states.geojson \
 	geojson/albers/counties.geojson \
 	geojson/albers/districts.geojson \
+	geojson/cartogram \
 	geojson/albers/state-labels.geojson \
 	geojson/albers/state-label-callouts.geojson
 	mkdir -p $(dir $@)
 	tippecanoe --projection EPSG:3857 \
 		-f \
+		--named-layer=electoral:geojson/cartogram/electoral-units.geojson \
+		--named-layer=cartolabels:geojson/cartogram/labels.geojson \
+		--named-layer=cartobounds:geojson/cartogram/boundaries.geojson \
 		--named-layer=states:geojson/albers/states.geojson \
 		--named-layer=counties:geojson/albers/counties.geojson \
 		--named-layer=districts:geojson/albers/districts.geojson \
