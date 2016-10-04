@@ -191,8 +191,8 @@ tiles/wapo-2016-election-cartogram.mbtiles: geojson/cartogram/electoral-units.ge
 	tippecanoe --projection EPSG:3857 \
 		-f \
 		--named-layer=electoral:geojson/cartogram/electoral-units.geojson \
-		--named-layer=boundaries:geojson/cartogram/boundaries.geojson \
-		--named-layer=labels:geojson/cartogram/labels.geojson \
+		--named-layer=cartoboundaries:geojson/cartogram/boundaries.geojson \
+		--named-layer=cartolabels:geojson/cartogram/labels.geojson \
 		--read-parallel \
 		--no-polygon-splitting \
 		--maximum-zoom=8 \
