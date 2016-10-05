@@ -37,7 +37,7 @@
     "raphael": "^2.2.6",
     "reproject": "^1.1.1",
     "through2": "^2.0.1",
-    "tile-index": "^1.0.0",
+    "tile-index": "^1.1.1",
     "turf": "^3.0.14",
     "turf-area": "^1.1.1",
     "turf-bbox-clip": "turfjs/turf-bbox-clip",
