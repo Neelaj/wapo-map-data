@@ -157,6 +157,12 @@ geojson/albers/city-labels.geojson:
 				name:name \
 		> $@
 
+tiles/merged.mbtiles: tiles/wapo-2016-election.mbtiles \
+	tiles/wapo-2016-election-centroids.mbtiles \
+	tiles/wapo-2016-election-city-labels.mbtiles
+	tile-join -fo $@ $^
+	echo "Merged tiles built as $@.  Uploaded this file to s3://wapo-election-tiles/merged-vX.mbtiles, and then update wapo-components/build_scripts/build-screenshotter.sh to point to the new version."
+
 tiles/wapo-2016-election-centroids.mbtiles: geojson/albers/centroid-states.geojson \
 	geojson/albers/centroid-counties.geojson \
 	geojson/albers/centroid-districts.geojson
