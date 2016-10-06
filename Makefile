@@ -86,7 +86,9 @@ geojson/albers/state-bounds.json: geojson/albers/states.geojson
 
 # Separate asset needed by wapo-components
 geojson/albers/tile-index.json: geojson/albers/us-10m
-	cat $^/*.geojson | ./reproject-geojson --projection mercator --reverse | node_modules/.bin/tile-index -z 7 -f indexed > $@
+	cat $^/*.geojson geojson/cartogram/*.geojson \
+		| ./reproject-geojson --projection mercator --reverse \
+		| node_modules/.bin/tile-index -z 7 -f indexed > $@
 
 geojson/albers/centroid-%: geojson/albers/%
 	cat $^ \
@@ -101,6 +103,18 @@ geojson/albers/centroid-radius-data.json: geojson/albers/centroid-states.geojson
 	cat $^ \
 		| jq '.features[].properties' | jq -s . \
 		> $@
+
+geojson/cartogram/%.geojson: data/cartogram/%.geojson
+	mkdir -p $(dir $@)
+	cat $^ \
+		| ./invert-cartogram-coords \
+		| ./reproject-geojson --projection mercator \
+		> $@
+
+geojson/cartogram:
+	make geojson/cartogram/boundaries.geojson
+	make geojson/cartogram/electoral-units.geojson
+	make geojson/cartogram/labels.geojson
 
 geojson/albers/state-labels-dataset.geojson:
 	curl "https://api.mapbox.com/datasets/v1/devseed/cis7wq7mj04l92zpk9tbk9wgo/features?access_token=$(MapboxAccessToken)" > $@
@@ -176,6 +190,22 @@ tiles/wapo-2016-election-centroids.mbtiles: geojson/albers/centroid-states.geojs
 		--no-polygon-splitting \
 		--drop-rate=0 \
 		--name=2016-us-election-centroids \
+		--output $@
+
+tiles/wapo-2016-election-cartogram.mbtiles: geojson/cartogram/electoral-units.geojson \
+	geojson/cartogram/boundaries.geojson \
+	geojson/cartogram/labels.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=electoral:geojson/cartogram/electoral-units.geojson \
+		--named-layer=cartoboundaries:geojson/cartogram/boundaries.geojson \
+		--named-layer=cartolabels:geojson/cartogram/labels.geojson \
+		--read-parallel \
+		--no-polygon-splitting \
+		--maximum-zoom=8 \
+		--drop-rate=0 \
+		--name=2016-us-election-cartogram \
 		--output $@
 
 tiles/wapo-2016-election-city-labels.mbtiles: geojson/albers/city-labels.geojson

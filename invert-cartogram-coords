@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+
+var geojsonStream = require('geojson-stream')
+var through = require('through2')
+
+process.stdin.pipe(geojsonStream.parse())
+.pipe(through.obj(write))
+.pipe(geojsonStream.stringify())
+.pipe(process.stdout)
+
+function write (feature, _, next) {
+  feature.geometry.coordinates = invert(feature.geometry.coordinates)
+  this.push(feature)
+  next()
+}
+
+var d3 = require('d3-geo')
+var proj = d3.geoMercator().translate([420, 235]).scale(720)
+
+function invert (coordinates) {
+  if (Array.isArray(coordinates[0])) {
+    return coordinates.map(invert)
+  }
+  else {
+    return proj.invert(coordinates)
+  }
+}
