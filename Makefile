@@ -40,10 +40,9 @@ geojson/precincts.ndjson: geojson/precincts
 	cat geojson/precincts/DC.geojson \
 		| jq '.features[] | .properties.id = .id | del(.id)' \
 		> $(dir $@)precincts.ndjson
-	# cat geojson/precincts/NC_pctgeo.js \
-	# 	| jq '.features[] | .properties.id = .properties.reportingu | del(properties.reportingu)' \
-	# 	| ./reproject-geojson 
-	# 	>> $(dir $@)precincts.ndjson
+	cat geojson/precincts/NC_pctgeo.js \
+		| jq '.features[] | .properties.id = .properties.reportingu | del(.properties.reportingu)' \
+		>> $(dir $@)precincts.ndjson
 
 geojson/precincts.geojson: geojson/precincts.ndjson
 	cat $^ | jq -s '{type: "FeatureCollection", features: .}' > $@
