@@ -33,15 +33,30 @@ geojson/districts.geojson: shp/us/congress-clipped.shp
 	cat $(dir $@)districts-temp.json | ./clip-at-dateline | ./normalize-district > $@
 	rm $(dir $@)districts-temp.json
 
+geojson/precincts:
+	aws s3 sync s3://wapo-precincts/geojson $@
+
+geojson/precincts.ndjson: geojson/precincts
+	cat geojson/precincts/DC.geojson \
+		| jq '.features[] | .properties.id = .id | del(.id)' \
+		> $(dir $@)precincts.ndjson
+	# cat geojson/precincts/NC_pctgeo.js \
+	# 	| jq '.features[] | .properties.id = .properties.reportingu | del(properties.reportingu)' \
+	# 	| ./reproject-geojson 
+	# 	>> $(dir $@)precincts.ndjson
+
+geojson/precincts.geojson: geojson/precincts.ndjson
+	cat $^ | jq -s '{type: "FeatureCollection", features: .}' > $@
+
 # Simplified copies certain geojson targets
-geojson/us-10m: geojson/counties.geojson geojson/districts.geojson geojson/states.geojson
+geojson/us-10m: geojson/counties.geojson geojson/districts.geojson geojson/states.geojson geojson/precincts.geojson
 	mkdir -p $@
 	node_modules/.bin/topojson \
 		-o $(dir $@)temp.json \
 		--no-pre-quantization \
 		--post-quantization=1e6 \
 		--simplify=7e-7 \
-		--properties GEOID,STATE_FIPS,FIPS\
+		--properties id,GEOID,STATE_FIPS,FIPS\
 		--external-properties data/fips.csv \
 		-- $^
 	node_modules/.bin/topojson-geojson -o $@ $(dir $@)temp.json
@@ -55,7 +70,7 @@ geojson/albers/%.geojson: geojson/%.geojson
 	mkdir -p $(dir $@)
 	cat $^ \
 		| ./reproject-geojson \
-		| ./normalize-properties GEOID:id STATE_FIPS:id FIPS:id  \
+		| ./normalize-properties id:id GEOID:id STATE_FIPS:id FIPS:id  \
 		| ./add-geojson-id id \
 		> $@
 
@@ -63,6 +78,7 @@ geojson/albers/us-10m: geojson/us-10m
 	make geojson/albers/us-10m/states.geojson
 	make geojson/albers/us-10m/counties.geojson
 	make geojson/albers/us-10m/districts.geojson
+	make geojson/albers/us-10m/precincts.geojson
 
 geojson/albers/relative-area.csv: geojson/albers/us-10m
 	$(eval TOTAL_AREA = \
@@ -79,6 +95,9 @@ geojson/albers/relative-area.csv: geojson/albers/us-10m
 	cat geojson/albers/us-10m/districts.geojson \
 		| ./reproject-geojson --projection mercator --reverse \
 		| ./calculate-area --normalize $(TOTAL_AREA) --precision 6 >> $@
+	cat geojson/albers/us-10m/precincts.geojson \
+		| ./reproject-geojson --projection mercator --reverse \
+		| ./calculate-area --normalize $(TOTAL_AREA) --precision 8 >> $@
 
 # Separate asset needed by wapo-components
 geojson/albers/state-bounds.json: geojson/albers/states.geojson
@@ -228,6 +247,7 @@ tiles/z0-4.mbtiles: geojson/albers/us-10m \
 		--named-layer=states:geojson/albers/us-10m/states.geojson \
 		--named-layer=counties:geojson/albers/us-10m/counties.geojson \
 		--named-layer=districts:geojson/albers/us-10m/districts.geojson \
+		--named-layer=precincts:geojson/albers/us-10m/precincts.geojson \
 		--named-layer=state-labels:geojson/albers/state-labels.geojson \
 		--named-layer=state-label-callouts:geojson/albers/state-label-callouts.geojson \
 		--read-parallel \
@@ -240,6 +260,7 @@ tiles/z0-4.mbtiles: geojson/albers/us-10m \
 tiles/z5-12.mbtiles: geojson/albers/states.geojson \
 	geojson/albers/counties.geojson \
 	geojson/albers/districts.geojson \
+	geojson/albers/precincts.geojson \
 	geojson/albers/state-labels.geojson \
 	geojson/albers/state-label-callouts.geojson
 	mkdir -p $(dir $@)
@@ -248,6 +269,7 @@ tiles/z5-12.mbtiles: geojson/albers/states.geojson \
 		--named-layer=states:geojson/albers/states.geojson \
 		--named-layer=counties:geojson/albers/counties.geojson \
 		--named-layer=districts:geojson/albers/districts.geojson \
+		--named-layer=precincts:geojson/albers/precincts.geojson \
 		--named-layer=state-labels:geojson/albers/state-labels.geojson \
 		--named-layer=state-label-callouts:geojson/albers/state-label-callouts.geojson \
 		--read-parallel \
