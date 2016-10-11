@@ -190,28 +190,30 @@ geojson/albers/city-labels.geojson:
 				name:name \
 		> $@
 
-tiles/merged.mbtiles: tiles/wapo-2016-election.mbtiles \
-	tiles/wapo-2016-election-centroids.mbtiles \
-	tiles/wapo-2016-election-city-labels.mbtiles
+tiles/merged.mbtiles: tiles/election.mbtiles \
+	tiles/election-centroids.mbtiles \
+	tiles/election-city-labels.mbtiles
 	tile-join -fo $@ $^
-	echo "Merged tiles built as $@.  Uploaded this file to s3://wapo-election-tiles/merged-vX.mbtiles, and then update wapo-components/build_scripts/build-screenshotter.sh to point to the new version."
+	echo "Merged tiles built as $@.  Upload this file to s3://wapo-election-tiles/merged-vX.mbtiles, and then update wapo-components/build_scripts/build-screenshotter.sh to point to the new version."
 
-tiles/wapo-2016-election-centroids.mbtiles: geojson/albers/centroid-states.geojson \
+tiles/election-centroids.mbtiles: geojson/albers/centroid-states.geojson \
 	geojson/albers/centroid-counties.geojson \
-	geojson/albers/centroid-districts.geojson
+	geojson/albers/centroid-districts.geojson \
+	geojson/albers/centroid-precincts.geojson
 	mkdir -p $(dir $@)
 	tippecanoe --projection EPSG:3857 \
 		-f \
 		--named-layer=states-centroids:geojson/albers/centroid-states.geojson \
 		--named-layer=counties-centroids:geojson/albers/centroid-counties.geojson \
 		--named-layer=districts-centroids:geojson/albers/centroid-districts.geojson \
+		--named-layer=precincts-centroids:geojson/albers/centroid-precincts.geojson \
 		--read-parallel \
 		--no-polygon-splitting \
 		--drop-rate=0 \
 		--name=2016-us-election-centroids \
 		--output $@
 
-tiles/wapo-2016-election-cartogram.mbtiles: geojson/cartogram/electoral-units.geojson \
+tiles/election-cartogram.mbtiles: geojson/cartogram/electoral-units.geojson \
 	geojson/cartogram/boundaries.geojson \
 	geojson/cartogram/labels.geojson
 	mkdir -p $(dir $@)
@@ -227,7 +229,7 @@ tiles/wapo-2016-election-cartogram.mbtiles: geojson/cartogram/electoral-units.ge
 		--name=2016-us-election-cartogram \
 		--output $@
 
-tiles/wapo-2016-election-city-labels.mbtiles: geojson/albers/city-labels.geojson
+tiles/election-city-labels.mbtiles: geojson/albers/city-labels.geojson
 	mkdir -p $(dir $@)
 	tippecanoe --projection EPSG:3857 \
 		-f \
@@ -280,7 +282,7 @@ tiles/z5-12.mbtiles: geojson/albers/states.geojson \
 		--name=2016-us-election \
 		--output $@
 
-tiles/wapo-2016-election.mbtiles: geojson/albers/relative-area.csv tiles/z0-4.mbtiles tiles/z5-12.mbtiles
+tiles/election.mbtiles: geojson/albers/relative-area.csv tiles/z0-4.mbtiles tiles/z5-12.mbtiles
 	tile-join -f -o $@ -c geojson/albers/relative-area.csv tiles/z0-4.mbtiles tiles/z5-12.mbtiles
 
 # Usage:

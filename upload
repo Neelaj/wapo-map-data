@@ -2,8 +2,8 @@
 
 TILESET=$1
 FILENAME=$2
-BUCKET="wapo-election-private-config"
-KEY="backup/tiles/$TILESET.mbtiles"
+BUCKET="wapo-election-tiles"
+KEY="map-data/$TILESET.mbtiles"
 
 if [[ -z $FORCE_UPLOAD ]]; then
   if aws s3api head-object --bucket $BUCKET --key $KEY; then
