@@ -38,6 +38,7 @@ geojson/precincts:
 
 geojson/precincts.ndjson: geojson/precincts
 	cat geojson/precincts/DC.geojson \
+		| sed 's/Precinct/precinct/g' \
 		| jq '.features[] | .properties.id = .id | del(.id)' \
 		> $(dir $@)precincts.ndjson
 	cat geojson/precincts/NC_pctgeo.js \
