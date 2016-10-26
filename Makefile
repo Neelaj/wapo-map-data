@@ -284,6 +284,7 @@ tiles/election-city-labels.mbtiles: geojson/albers/city-labels.geojson
 		--no-polygon-splitting \
 		--drop-rate=0 \
 		--name=2016-us-election-cities \
+		--buffer=20 \
 		--output $@
 
 tiles/z0-1.mbtiles: geojson/albers/us-smallest/states.geojson \
