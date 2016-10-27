@@ -181,6 +181,9 @@ geojson/cartogram:
 	make geojson/cartogram/electoral-units.geojson
 	make geojson/cartogram/labels.geojson
 
+geojson/cartogram/cartogram-bounds.json: geojson/cartogram/boundaries.geojson
+	cat $^ | ./extract-projected-bounds > $@
+
 geojson/albers/state-labels-dataset.geojson:
 	# Note: Need to preclude this with Mapbox Token
 	curl "https://api.mapbox.com/datasets/v1/devseed/cis7wq7mj04l92zpk9tbk9wgo/features?access_token=$(MapboxAccessToken)" > $@
