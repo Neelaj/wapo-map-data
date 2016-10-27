@@ -354,7 +354,7 @@
         "national": null,
         "pop_max": 38725,
         "scalerank": 3,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -1014,7 +1014,7 @@
         "national": null,
         "pop_max": 528892,
         "scalerank": 6,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -4028,7 +4028,7 @@
         "national": null,
         "pop_max": 36688,
         "scalerank": 6,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -4042,7 +4042,7 @@
       },
       "properties": {
         "adm1name": "Kentucky",
-        "align": null,
+        "align": "bottom",
         "latitude": 38.225017,
         "longitude": -85.748704,
         "name": "Louisville",
@@ -5788,7 +5788,7 @@
         "national": null,
         "pop_max": 63196,
         "scalerank": 7,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -5964,7 +5964,7 @@
         "national": null,
         "pop_max": 84576,
         "scalerank": 8,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -6866,7 +6866,7 @@
         "national": null,
         "pop_max": 13879,
         "scalerank": 3,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -8816,7 +8816,7 @@
       },
       "properties": {
         "adm1name": "Indiana",
-        "align": null,
+        "align": "left",
         "latitude": 38.310877,
         "longitude": -85.821284,
         "name": "New Albany",
@@ -8824,7 +8824,7 @@
         "national": null,
         "pop_max": 120625,
         "scalerank": 8,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -9066,7 +9066,7 @@
         "national": null,
         "pop_max": 335509,
         "scalerank": 8,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -9102,7 +9102,7 @@
       },
       "properties": {
         "adm1name": "Massachusetts",
-        "align": "right",
+        "align": null,
         "latitude": 42.633688,
         "longitude": -71.316691,
         "name": "Lowell",
@@ -10122,7 +10122,7 @@
         "national": null,
         "pop_max": 1604000,
         "scalerank": 3,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -11126,7 +11126,7 @@
       },
       "properties": {
         "adm1name": "New York",
-        "align": "right",
+        "align": null,
         "latitude": 40.749979,
         "longitude": -73.980017,
         "name": "New York",
@@ -11552,7 +11552,7 @@
         "national": null,
         "pop_max": 279952,
         "scalerank": 6,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -11794,7 +11794,7 @@
         "national": null,
         "pop_max": 55139,
         "scalerank": 6,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -11852,7 +11852,7 @@
       },
       "properties": {
         "adm1name": "Missouri",
-        "align": "left",
+        "align": "right",
         "latitude": 38.635018,
         "longitude": -90.239981,
         "name": "St. Louis",
@@ -12146,7 +12146,7 @@
         "national": null,
         "pop_max": 156984,
         "scalerank": 4,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -15666,7 +15666,7 @@
         "national": null,
         "pop_max": 57341,
         "scalerank": 6,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
@@ -16656,7 +16656,7 @@
         "national": null,
         "pop_max": 221222,
         "scalerank": 4,
-        "visible": 0
+        "visible": 1
       },
       "type": "Feature"
     },
