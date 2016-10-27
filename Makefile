@@ -105,9 +105,9 @@ geojson/albers/state-bounds.json: geojson/albers/states.geojson
 
 # Separate asset needed by wapo-components
 geojson/albers/tile-index.json: geojson/albers/us-10m
-	cat $^/*.geojson geojson/cartogram/*.geojson \
+	cat $^/states.geojson geojson/cartogram/boundaries.geojson \
 		| ./reproject-geojson --projection mercator --reverse \
-		| node_modules/.bin/tile-index -z 7 -f indexed > $@
+		| node_modules/.bin/tile-index -z 5 -f indexed > $@
 
 geojson/albers/centroid-%: geojson/albers/%
 	cat $^ \
