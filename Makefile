@@ -24,14 +24,15 @@ geojson/counties.geojson: shp/us/counties.shp
 	cat $(dir $@)counties-temp.json | ./clip-at-dateline > $@
 	rm $(dir $@)counties-temp.json
 
-geojson/districts.geojson: shp/us/congress-clipped.shp
+# For districts_115, download and put in the geojson folder
+geojson/districts_114.geojson: shp/us/congress-clipped.shp
 	mkdir -p $(dir $@)
 	rm -rf $@
 	ogr2ogr -f "GeoJSON" $(dir $@)districts-temp.json $< \
 		-dialect sqlite -sql \
 		"select ST_union(Geometry),GEOID,STATEFP from 'congress-clipped' GROUP BY GEOID"
 	cat $(dir $@)districts-temp.json | ./clip-at-dateline | ./normalize-district > $@
-	rm $(dir $@)districts-temp.json
+	rm $(dir $@)districts-temp.json	
 
 geojson/precincts:
 	aws s3 sync s3://wapo-precincts/geojson $@
@@ -49,7 +50,7 @@ geojson/precincts.geojson: geojson/precincts.ndjson
 	cat $^ | jq -s '{type: "FeatureCollection", features: .}' > $@
 
 # Simplified copies certain geojson targets
-geojson/us-10m: geojson/counties.geojson geojson/districts.geojson geojson/states.geojson geojson/precincts.geojson
+geojson/us-10m: geojson/counties.geojson geojson/districts_115.geojson geojson/states.geojson geojson/precincts.geojson
 	mkdir -p $@
 	node_modules/.bin/topojson \
 		-o $(dir $@)temp.json \
@@ -62,6 +63,44 @@ geojson/us-10m: geojson/counties.geojson geojson/districts.geojson geojson/state
 	node_modules/.bin/topojson-geojson -o $@ $(dir $@)temp.json
 	for f in $$(ls $@) ; do mv $@/$$f $@/$$(basename $$f .json).geojson; done
 	rm $(dir $@)temp.json
+
+geojson/us-lowzoom/%: geojson/%
+	mkdir -p geojson/us-lowzoom
+	node_modules/.bin/topojson \
+		-o $(dir $@)temp.json \
+		--no-pre-quantization \
+		--post-quantization=1e6 \
+		--simplify=3e-6 \
+		--properties id,GEOID,STATE_FIPS,FIPS\
+		--external-properties data/fips.csv \
+		-- $^
+	node_modules/.bin/topojson-geojson -o geojson/us-lowzoom geojson/us-lowzoom/temp.json
+	rm geojson/us-lowzoom/temp.json
+
+geojson/us-smallest/%: geojson/%
+	mkdir -p geojson/us-smallest
+	node_modules/.bin/topojson \
+		-o $(dir $@)temp.json \
+		--no-pre-quantization \
+		--post-quantization=1e6 \
+		--simplify=3e-5 \
+		--properties id,GEOID,STATE_FIPS,FIPS\
+		--external-properties data/fips.csv \
+		-- $^
+	node_modules/.bin/topojson-geojson -o geojson/us-smallest geojson/us-smallest/temp.json
+	rm geojson/us-smallest/temp.json
+
+geojson/us-lowzoom-factory: 
+	make geojson/us-lowzoom/states.geojson
+	make geojson/us-lowzoom/counties.geojson
+	make geojson/us-lowzoom/districts_114.geojson
+	make geojson/us-lowzoom/districts_115.geojson
+
+geojson/us-smallest-factory:
+	make geojson/us-smallest/states.geojson
+	make geojson/us-smallest/counties.geojson
+	make geojson/us-smallest/districts_114.geojson
+	make geojson/us-smallest/districts_115.geojson
 
 #
 # Albers
@@ -77,8 +116,21 @@ geojson/albers/%.geojson: geojson/%.geojson
 geojson/albers/us-10m: geojson/us-10m
 	make geojson/albers/us-10m/states.geojson
 	make geojson/albers/us-10m/counties.geojson
-	make geojson/albers/us-10m/districts.geojson
+	make geojson/albers/us-10m/districts_114.geojson
+	make geojson/albers/us-10m/districts_115.geojson
 	make geojson/albers/us-10m/precincts.geojson
+
+geojson/albers/us-lowzoom: geojson/us-lowzoom
+	make geojson/albers/us-lowzoom/states.geojson
+	make geojson/albers/us-lowzoom/counties.geojson
+	make geojson/albers/us-lowzoom/districts_114.geojson
+	make geojson/albers/us-lowzoom/districts_115.geojson
+
+geojson/albers/us-smallest: geojson/us-smallest
+	make geojson/albers/us-smallest/states.geojson
+	make geojson/albers/us-smallest/counties.geojson
+	make geojson/albers/us-smallest/districts_114.geojson
+	make geojson/albers/us-smallest/districts_115.geojson
 
 geojson/albers/relative-area.csv: geojson/albers/us-10m
 	$(eval TOTAL_AREA = \
@@ -92,7 +144,10 @@ geojson/albers/relative-area.csv: geojson/albers/us-10m
 	cat geojson/albers/us-10m/counties.geojson \
 		| ./reproject-geojson --projection mercator --reverse \
 		| ./calculate-area --normalize $(TOTAL_AREA) --precision 6 >> $@
-	cat geojson/albers/us-10m/districts.geojson \
+	cat geojson/albers/us-10m/districts_114.geojson \
+		| ./reproject-geojson --projection mercator --reverse \
+		| ./calculate-area --normalize $(TOTAL_AREA) --precision 6 >> $@
+	cat geojson/albers/us-10m/districts_115.geojson \
 		| ./reproject-geojson --projection mercator --reverse \
 		| ./calculate-area --normalize $(TOTAL_AREA) --precision 6 >> $@
 	cat geojson/albers/us-10m/precincts.geojson \
@@ -105,9 +160,9 @@ geojson/albers/state-bounds.json: geojson/albers/states.geojson
 
 # Separate asset needed by wapo-components
 geojson/albers/tile-index.json: geojson/albers/us-10m
-	cat $^/*.geojson geojson/cartogram/*.geojson \
+	cat $^/states.geojson geojson/cartogram/boundaries.geojson \
 		| ./reproject-geojson --projection mercator --reverse \
-		| node_modules/.bin/tile-index -z 7 -f indexed > $@
+		| node_modules/.bin/tile-index -z 5 -f indexed > $@
 
 geojson/albers/centroid-%: geojson/albers/%
 	cat $^ \
@@ -117,7 +172,8 @@ geojson/albers/centroid-%: geojson/albers/%
 
 # Separate asset needed by wapo-components
 geojson/albers/centroid-radius-data.json: geojson/albers/centroid-states.geojson \
-	geojson/albers/centroid-districts.geojson \
+	geojson/albers/centroid-districts_114.geojson \
+	geojson/albers/centroid-districts_115.geojson \
 	geojson/albers/centroid-counties.geojson
 	cat $^ \
 		| jq '.features[].properties' | jq -s . \
@@ -135,7 +191,11 @@ geojson/cartogram:
 	make geojson/cartogram/electoral-units.geojson
 	make geojson/cartogram/labels.geojson
 
+geojson/cartogram/cartogram-bounds.json: geojson/cartogram/boundaries.geojson
+	cat $^ | ./extract-projected-bounds > $@
+
 geojson/albers/state-labels-dataset.geojson:
+	# Note: Need to preclude this with Mapbox Token
 	curl "https://api.mapbox.com/datasets/v1/devseed/cis7wq7mj04l92zpk9tbk9wgo/features?access_token=$(MapboxAccessToken)" > $@
 
 geojson/albers/state-labels.geojson: geojson/albers/state-labels-dataset.geojson
@@ -198,14 +258,16 @@ tiles/merged.mbtiles: tiles/election.mbtiles \
 
 tiles/election-centroids.mbtiles: geojson/albers/centroid-states.geojson \
 	geojson/albers/centroid-counties.geojson \
-	geojson/albers/centroid-districts.geojson \
+	geojson/albers/centroid-districts_114.geojson \
+	geojson/albers/centroid-districts_115.geojson \
 	geojson/albers/centroid-precincts.geojson
 	mkdir -p $(dir $@)
 	tippecanoe --projection EPSG:3857 \
 		-f \
 		--named-layer=states-centroids:geojson/albers/centroid-states.geojson \
 		--named-layer=counties-centroids:geojson/albers/centroid-counties.geojson \
-		--named-layer=districts-centroids:geojson/albers/centroid-districts.geojson \
+		--named-layer=districts-centroids:geojson/albers/centroid-districts_114.geojson \
+		--named-layer=districts-centroids:geojson/albers/centroid-districts_115.geojson \
 		--named-layer=precincts-centroids:geojson/albers/centroid-precincts.geojson \
 		--read-parallel \
 		--no-polygon-splitting \
@@ -238,9 +300,56 @@ tiles/election-city-labels.mbtiles: geojson/albers/city-labels.geojson
 		--no-polygon-splitting \
 		--drop-rate=0 \
 		--name=2016-us-election-cities \
+		--buffer=20 \
 		--output $@
 
-tiles/z0-4.mbtiles: geojson/albers/us-10m \
+tiles/z0-1.mbtiles: geojson/albers/us-smallest/states.geojson \
+	geojson/albers/us-smallest/counties.geojson \
+	geojson/albers/us-smallest/districts_114.geojson \
+	geojson/albers/us-smallest/districts_115.geojson \
+	geojson/albers/state-labels.geojson \
+	geojson/albers/state-label-callouts.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=states:geojson/albers/us-smallest/states.geojson \
+		--named-layer=counties:geojson/albers/us-smallest/counties.geojson \
+		--named-layer=districts_114:geojson/albers/us-smallest/districts_114.geojson \
+		--named-layer=districts_115:geojson/albers/us-smallest/districts_115.geojson \
+		--named-layer=precincts:geojson/albers/us-smallest/precincts.geojson \
+		--named-layer=state-labels:geojson/albers/state-labels.geojson \
+		--named-layer=state-label-callouts:geojson/albers/state-label-callouts.geojson \
+		--read-parallel \
+		--no-polygon-splitting \
+		--maximum-zoom=1 \
+		--drop-rate=0 \
+		--name=2016-us-election \
+		--output $@
+
+tiles/z2-3.mbtiles: geojson/albers/us-lowzoom/states.geojson \
+	geojson/albers/us-lowzoom/counties.geojson \
+	geojson/albers/us-lowzoom/districts_114.geojson \
+	geojson/albers/us-lowzoom/districts_115.geojson \
+	geojson/albers/state-labels.geojson \
+	geojson/albers/state-label-callouts.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=states:geojson/albers/us-lowzoom/states.geojson \
+		--named-layer=counties:geojson/albers/us-lowzoom/counties.geojson \
+		--named-layer=districts_114:geojson/albers/us-lowzoom/districts_114.geojson \
+		--named-layer=districts_115:geojson/albers/us-lowzoom/districts_115.geojson \
+		--named-layer=state-labels:geojson/albers/state-labels.geojson \
+		--named-layer=state-label-callouts:geojson/albers/state-label-callouts.geojson \
+		--read-parallel \
+		--no-polygon-splitting \
+		--minimum-zoom=2 \
+		--maximum-zoom=3 \
+		--drop-rate=0 \
+		--name=2016-us-election \
+		--output $@
+
+tiles/z4-6.mbtiles: geojson/albers/us-10m \
 	geojson/albers/state-labels.geojson \
 	geojson/albers/state-label-callouts.geojson
 	mkdir -p $(dir $@)
@@ -248,20 +357,23 @@ tiles/z0-4.mbtiles: geojson/albers/us-10m \
 		-f \
 		--named-layer=states:geojson/albers/us-10m/states.geojson \
 		--named-layer=counties:geojson/albers/us-10m/counties.geojson \
-		--named-layer=districts:geojson/albers/us-10m/districts.geojson \
+		--named-layer=districts_114:geojson/albers/us-10m/districts_114.geojson \
+		--named-layer=districts_115:geojson/albers/us-10m/districts_115.geojson \
 		--named-layer=precincts:geojson/albers/us-10m/precincts.geojson \
 		--named-layer=state-labels:geojson/albers/state-labels.geojson \
 		--named-layer=state-label-callouts:geojson/albers/state-label-callouts.geojson \
 		--read-parallel \
 		--no-polygon-splitting \
-		--maximum-zoom=4 \
+		--minimum-zoom=4 \
+		--maximum-zoom=6 \
 		--drop-rate=0 \
 		--name=2016-us-election \
 		--output $@
 
-tiles/z5-12.mbtiles: geojson/albers/states.geojson \
+tiles/z7-12.mbtiles: geojson/albers/states.geojson \
 	geojson/albers/counties.geojson \
-	geojson/albers/districts.geojson \
+	geojson/albers/districts_114.geojson \
+	geojson/albers/districts_115.geojson \
 	geojson/albers/precincts.geojson \
 	geojson/albers/state-labels.geojson \
 	geojson/albers/state-label-callouts.geojson
@@ -270,20 +382,21 @@ tiles/z5-12.mbtiles: geojson/albers/states.geojson \
 		-f \
 		--named-layer=states:geojson/albers/states.geojson \
 		--named-layer=counties:geojson/albers/counties.geojson \
-		--named-layer=districts:geojson/albers/districts.geojson \
+		--named-layer=districts_114:geojson/albers/districts_114.geojson \
+		--named-layer=districts_115:geojson/albers/districts_115.geojson \
 		--named-layer=precincts:geojson/albers/precincts.geojson \
 		--named-layer=state-labels:geojson/albers/state-labels.geojson \
 		--named-layer=state-label-callouts:geojson/albers/state-label-callouts.geojson \
 		--read-parallel \
 		--no-polygon-splitting \
-		--minimum-zoom=5 \
+		--minimum-zoom=7 \
 		--maximum-zoom=12 \
 		--drop-rate=0 \
 		--name=2016-us-election \
 		--output $@
 
-tiles/election.mbtiles: geojson/albers/relative-area.csv tiles/z0-4.mbtiles tiles/z5-12.mbtiles
-	tile-join -f -o $@ -c geojson/albers/relative-area.csv tiles/z0-4.mbtiles tiles/z5-12.mbtiles
+tiles/election.mbtiles: geojson/albers/relative-area.csv tiles/z0-1.mbtiles tiles/z2-3.mbtiles tiles/z4-6.mbtiles tiles/z7-12.mbtiles
+	tile-join -f -o $@ -c geojson/albers/relative-area.csv tiles/z0-1.mbtiles tiles/z2-3.mbtiles tiles/z4-6.mbtiles tiles/z7-12.mbtiles
 
 # Usage:
 # TILESET=accountname.tilesetname make upload/tiles-filename
@@ -347,25 +460,4 @@ geojson/%/sldl.geojson: topo/us-%-sldl.json
 #
 STATES=al ak az ar ca co ct de dc fl ga hi id il in ia ks ky la me md ma mi mn ms mo mt ne nv nh nj nm ny nc nd oh ok or pa ri sc sd tn tx ut vt va wa wv wi wy
 .PHONY: all-pop-blocks
-all-pop-blocks:
-	for i in ${STATES} ; do make geojson/us-$$i-pop-blocks.geojson && rm shp/$$i/pop_blocks.shp ; done
-
-topo/us-%-pop-blocks.json: shp/%/pop_blocks.shp
-	mkdir -p $(dir $@)
-	node_modules/.bin/topojson \
-		-o $@ \
-		--no-pre-quantization \
-		--post-quantization=1e6 \
-		--simplify=7e-7 \
-		--id-property=+BLOCKID10 \
-		--properties HOUSING10,POP10 \
-		-- $<
-
-geojson/us-%-pop-blocks.geojson: topo/us-%-pop-blocks.json
-	mkdir -p $(basename $@)
-	node_modules/.bin/topojson-geojson -o $(basename $@) \
-		--id-property=BLOCKID10 \
-		$<
-	cp $(basename $@)/pop_blocks.json $@
-	rm -rf $(basename $@)
-
+-all-pop-blocks:
