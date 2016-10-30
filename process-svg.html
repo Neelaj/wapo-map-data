@@ -1325,6 +1325,8 @@
             <path id="ma_2_" fill="none" stroke="#000000" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" d="
                     M677.604,72.966l27.325-26.944l13.662,13.472l13.662-13.472l13.664,13.472l27.325-26.944l13.665,13.473l-13.665,13.472
                     l13.665,13.473l-27.326,26.945l-13.664-13.473l-13.664,13.473l-13.662-13.473L704.93,99.911L677.604,72.966z"/>
+            <path id="dc_2_" fill="none" stroke="#000000" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" d="
+                    M582.153,248.155l13.663-13.473l13.663,13.473l13.664-13.473l13.663,13.473l-27.326,26.945L582.153,248.155z"/>
     </g>
     <g id="labels">
             <text id="wa" transform="matrix(1 0 0 1 186.73 132.6675)" font-family="'FranklinITCStd-Light'" font-size="10">Wash.</text>
@@ -1511,9 +1513,8 @@
       })
 
     }
-    document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(electoralUnits))
+    // document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(electoralUnits))
     // document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(boundaries))
-    // document.getElementById('output').innerHTML = JSON.stringify(turf.featureCollection(labelFeatures))
 
     function getPoints (path) {
       var d = path.getAttribute('d')

@@ -179,7 +179,9 @@ geojson/cartogram/%.geojson: data/cartogram/%.geojson
 geojson/cartogram:
 	make geojson/cartogram/boundaries.geojson
 	make geojson/cartogram/electoral-units.geojson
-	make geojson/cartogram/labels.geojson
+
+geojson/cartogram/cartogram-bounds.json: geojson/cartogram/boundaries.geojson
+	cat $^ | ./extract-projected-bounds > $@
 
 geojson/albers/state-labels-dataset.geojson:
 	# Note: Need to preclude this with Mapbox Token
@@ -262,13 +264,13 @@ tiles/election-centroids.mbtiles: geojson/albers/centroid-states.geojson \
 
 tiles/election-cartogram.mbtiles: geojson/cartogram/electoral-units.geojson \
 	geojson/cartogram/boundaries.geojson \
-	geojson/cartogram/labels.geojson
+	data/cartogram-labels.geojson
 	mkdir -p $(dir $@)
 	tippecanoe --projection EPSG:3857 \
 		-f \
 		--named-layer=electoral:geojson/cartogram/electoral-units.geojson \
 		--named-layer=cartoboundaries:geojson/cartogram/boundaries.geojson \
-		--named-layer=cartolabels:geojson/cartogram/labels.geojson \
+		--named-layer=cartolabels:data/cartogram-labels.geojson \
 		--read-parallel \
 		--no-polygon-splitting \
 		--maximum-zoom=8 \
