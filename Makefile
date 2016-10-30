@@ -36,6 +36,13 @@ geojson/districts.geojson: shp/us/congress-clipped.shp
 geojson/precincts:
 	aws s3 sync s3://wapo-precincts/geojson $@
 
+geojson/towns.geojson: shp/us/towns.shp bin/apply-ne-town-ids
+	mkdir -p $(dir $@)
+	rm -f $@
+	ogr2ogr -f "GeoJSON" $@ @<
+	bin/apply-ne-town-ids
+	rm -rf tmp
+
 geojson/precincts.ndjson: geojson/precincts
 	cat geojson/precincts/DC.geojson \
 		| sed 's/Precinct/precinct/g' \

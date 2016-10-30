@@ -17,6 +17,18 @@ shp/us/congress-unfiltered.shp: gz/tl_2015_us_cd114.zip
 shp/us/zipcodes-unmerged.shp: gz/tl_2015_us_zcta510.zip
 shp/us/cbsa.shp: gz/tl_2015_us_cbsa.zip
 
+shp/ct/towns.shp: gz/tl_2015_09_cousub.zip
+shp/ma/towns.shp: gz/tl_2015_25_cousub.zip
+shp/nh/towns.shp: gz/tl_2015_33_cousub.zip
+shp/ri/towns.shp: gz/tl_2015_44_cousub.zip
+shp/vt/towns.shp: gz/tl_2015_50_cousub.zip
+shp/us/towns.shp: shp/ct/towns.shp shp/ma/towns.shp shp/nh/towns.shp shp/ri/towns.shp shp/vt/towns.shp
+	rm -f $@ tmp/towns-filtered.shp tmp/towns-unfiltered.shp
+	mkdir -p tmp
+	for file in $?; do ogr2ogr -f "ESRI Shapefile" -update -append tmp/towns-unfiltered.shp "$$file"; done;
+	ogr2ogr -f 'ESRI Shapefile' -where "COUSUBFP != '00000'" tmp/towns-filtered.shp tmp/towns-unfiltered.shp
+	ogr2ogr -f 'ESRI Shapefile' -clipsrc shp/us/nation-unmerged.shp $@ tmp/towns-filtered.shp
+
 shp/al/tracts.shp: gz/tl_2015_01_tract.zip
 shp/ak/tracts.shp: gz/tl_2015_02_tract.zip
 shp/az/tracts.shp: gz/tl_2015_04_tract.zip
@@ -401,7 +413,7 @@ shp/us/%.json: shp/us/%-unmerged.shp bin/geomerge
 	ogr2ogr -f 'GeoJSON' $(basename $@)-unmerged.json $<
 	bin/geomerge < $(basename $@)-unmerged.json > $@
 
-shp/us/zipcodes-unmerged.shp shp/us/cbsa.shp shp/%/tracts.shp shp/%/blockgroups.shp shp/%/blocks.shp shp/%/pop_blocks.shp shp/%/sldl.shp shp/%/sldu.shp:
+shp/us/zipcodes-unmerged.shp shp/us/cbsa.shp shp/%/towns.shp shp/%/tracts.shp shp/%/blockgroups.shp shp/%/blocks.shp shp/%/pop_blocks.shp shp/%/sldl.shp shp/%/sldu.shp:
 	rm -rf $(basename $@)
 	mkdir -p $(basename $@)
 	unzip -d $(basename $@) $<

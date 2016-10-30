@@ -4,6 +4,12 @@ gz/%.tar.gz:
 	curl 'http://dds.cr.usgs.gov/pub/data/nationalatlas/$(notdir $@)' -o $@.download
 	mv $@.download $@
 
+# New England towns (ie, sub-counties)
+gz/tl_2015_%_cousub.zip:
+	mkdir -p $(dir $@)
+	curl 'http://www2.census.gov/geo/tiger/TIGER2015/COUSUB/$(notdir $@)' -o $@.download
+	mv $@.download $@
+
 # Zip Code Tabulation Areas
 gz/tl_2015_us_zcta510.zip:
 	mkdir -p $(dir $@)

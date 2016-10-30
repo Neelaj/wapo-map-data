@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+
+const fs = require('fs')
+const path = require('path')
+const townRUUIDsByGEOID = require('../data/ne-town-ruuids.json')
+const TOWN_FILE = '../geojson/towns.geojson'
+let data = JSON.parse(fs.readFileSync(path.join(__dirname, TOWN_FILE)))
+
+let countChanged = 0
+let countUnchanged = 0
+data.features.forEach(f => {
+  f.properties.id = townRUUIDsByGEOID[f.properties.GEOID]
+  if (f.properties.id) { countChanged += 1 }
+  else { countUnchanged += 1 }
+})
+fs.writeFileSync(path.join(__dirname, TOWN_FILE), JSON.stringify(data))
+console.log(`Added town RU UIDs for ${countChanged} features`)
+console.log(`${countUnchanged} features are not in the AP data, and were not assigned IDs`)
