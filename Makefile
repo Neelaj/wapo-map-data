@@ -93,11 +93,15 @@ geojson/us-lowzoom-factory:
 	make geojson/us-lowzoom/states.geojson
 	make geojson/us-lowzoom/counties.geojson
 	make geojson/us-lowzoom/districts.geojson
+	make geojson/us-lowzoom/districts_115.geojson
+	for f in $$(ls geojson/us-lowzoom) ; do mv geojson/us-lowzoom/$$f geojson/us-lowzoom/$$(basename $$f .json).geojson; done
 
 geojson/us-smallest-factory:
 	make geojson/us-smallest/states.geojson
 	make geojson/us-smallest/counties.geojson
 	make geojson/us-smallest/districts.geojson
+	make geojson/us-smallest/districts_115.geojson
+	for f in $$(ls geojson/us-smallest) ; do mv geojson/us-smallest/$$f geojson/us-smallest/$$(basename $$f .json).geojson; done
 
 #
 # Albers
@@ -369,11 +373,11 @@ tiles/counties:
 	make tiles/counties-z4-6.mbtiles
 	make tiles/counties-z7-12.mbtiles
 
-tiles/districts_114: 
-	make tiles/districts_114-z0-1.mbtiles
-	make tiles/districts_114-z2-3.mbtiles
-	make tiles/districts_114-z4-6.mbtiles
-	make tiles/districts_114-z7-12.mbtiles
+tiles/districts: 
+	make tiles/districts-z0-1.mbtiles
+	make tiles/districts-z2-3.mbtiles
+	make tiles/districts-z4-6.mbtiles
+	make tiles/districts-z7-12.mbtiles
 
 tiles/districts_115: 
 	make tiles/districts_115-z0-1.mbtiles
