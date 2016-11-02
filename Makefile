@@ -413,7 +413,7 @@ tiles/precincts:
 	make tiles/precincts-z7-12.mbtiles	
 
 tiles/election-%.mbtiles: tiles/%-z0-1.mbtiles tiles/%-z2-3.mbtiles tiles/%-z4-6.mbtiles tiles/%-z7-12.mbtiles
-	tile-join -f -o $@ -c tiles/$*-z0-1.mbtiles tiles/$*-z2-3.mbtiles tiles/$*-z4-6.mbtiles tiles/$*-z7-12.mbtiles
+	tile-join -f -o $@ tiles/$*-z0-1.mbtiles tiles/$*-z2-3.mbtiles tiles/$*-z4-6.mbtiles tiles/$*-z7-12.mbtiles
 
 tile-factory-%:
 	make tiles/$*
