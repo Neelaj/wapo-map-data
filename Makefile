@@ -49,8 +49,22 @@ geojson/precincts.geojson: geojson/precincts.ndjson
 	cat $^ | jq -s '{type: "FeatureCollection", features: .}' > $@
 
 # Simplified copies certain geojson targets
-geojson/us-10m: geojson/counties.geojson geojson/districts.geojson geojson/states.geojson geojson/precincts.geojson
-	mkdir -p $@
+# geojson/us-10m: geojson/counties.geojson geojson/districts.geojson geojson/states.geojson geojson/precincts.geojson
+# 	mkdir -p $@
+# 	node_modules/.bin/topojson \
+# 		-o $(dir $@)temp.json \
+# 		--no-pre-quantization \
+# 		--post-quantization=1e6 \
+# 		--simplify=7e-7 \
+# 		--properties id,GEOID,STATE_FIPS,FIPS\
+# 		--external-properties data/fips.csv \
+# 		-- $^
+# 	node_modules/.bin/topojson-geojson -o $@ $(dir $@)temp.json
+# 	for f in $$(ls $@) ; do mv $@/$$f $@/$$(basename $$f .json).geojson; done
+# 	rm $(dir $@)temp.json
+
+geojson/us-10m/%: geojson/%
+	mkdir -p geojson/us-10m
 	node_modules/.bin/topojson \
 		-o $(dir $@)temp.json \
 		--no-pre-quantization \
@@ -59,9 +73,8 @@ geojson/us-10m: geojson/counties.geojson geojson/districts.geojson geojson/state
 		--properties id,GEOID,STATE_FIPS,FIPS\
 		--external-properties data/fips.csv \
 		-- $^
-	node_modules/.bin/topojson-geojson -o $@ $(dir $@)temp.json
-	for f in $$(ls $@) ; do mv $@/$$f $@/$$(basename $$f .json).geojson; done
-	rm $(dir $@)temp.json
+	node_modules/.bin/topojson-geojson -o geojson/us-10m geojson/us-10m/temp.json
+	rm geojson/us-10m/temp.json
 
 geojson/us-lowzoom/%: geojson/%
 	mkdir -p geojson/us-lowzoom
@@ -88,6 +101,14 @@ geojson/us-smallest/%: geojson/%
 		-- $^
 	node_modules/.bin/topojson-geojson -o geojson/us-smallest geojson/us-smallest/temp.json
 	rm geojson/us-smallest/temp.json
+
+geojson/us-10m-factory:
+	make geojson/us-10m/counties.geojson
+	make geojson/us-10m/states.geojson
+	make geojson/us-10m/precincts.geojson
+	make geojson/us-10m/districts.geojson
+	make geojson/us-10m/districts_115.geojson
+	for f in $$(ls geojson/us-10m) ; do mv geojson/us-10m/$$f geojson/us-10m/$$(basename $$f .json).geojson; done
 
 geojson/us-lowzoom-factory: 
 	make geojson/us-lowzoom/states.geojson
@@ -118,17 +139,20 @@ geojson/albers/us-10m: geojson/us-10m
 	make geojson/albers/us-10m/states.geojson
 	make geojson/albers/us-10m/counties.geojson
 	make geojson/albers/us-10m/districts.geojson
+	make geojson/albers/us-10m/districts_115.geojson
 	make geojson/albers/us-10m/precincts.geojson
 
 geojson/albers/us-lowzoom: geojson/us-lowzoom
 	make geojson/albers/us-lowzoom/states.geojson
 	make geojson/albers/us-lowzoom/counties.geojson
 	make geojson/albers/us-lowzoom/districts.geojson
+	make geojson/albers/us-lowzoom/districts_115.geojson
 
 geojson/albers/us-smallest: geojson/us-smallest
 	make geojson/albers/us-smallest/states.geojson
 	make geojson/albers/us-smallest/counties.geojson
 	make geojson/albers/us-smallest/districts.geojson
+	make geojson/albers/us-smallest/districts_115.geojson
 
 geojson/albers/relative-area.csv: geojson/albers/us-10m
 	$(eval TOTAL_AREA = \
