@@ -204,13 +204,25 @@ geojson/cartogram/%.geojson: data/cartogram/%.geojson
 		| ./reproject-geojson --projection mercator \
 		> $@
 
+# Reproject Roads
+geojson/albers/us-roads-interstate.geojson: geojson/us-roads-interstate.geojson
+	mkdir -p $(dir $@)
+	cat $^ \
+		| ./reproject-geojson \
+		> $@
+
+geojson/albers/us-roads-federal.geojson: geojson/us-roads-federal.geojson
+	mkdir -p $(dir $@)
+	cat $^ \
+		| ./reproject-geojson \
+		> $@
+
 geojson/cartogram:
 	make geojson/cartogram/boundaries.geojson
 	make geojson/cartogram/electoral-units.geojson
 
 geojson/cartogram/cartogram-bounds.json: geojson/cartogram/boundaries.geojson
 	cat $^ | ./extract-projected-bounds > $@
-
 
 geojson/albers/state-labels-dataset.geojson:
 	# Note: Need to preclude this with Mapbox Token
@@ -424,6 +436,56 @@ tiles/election-%.mbtiles: tiles/%-z0-1.mbtiles tiles/%-z2-3.mbtiles tiles/%-z4-6
 tile-factory-%:
 	make tiles/$*
 	make tiles/election-$*.mbtiles
+
+#
+# Roads
+#
+
+tiles/roads-interstate-high.mbtiles: geojson/albers/us-roads-interstate.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=us-roads:geojson/albers/us-roads-interstate.geojson \
+		--read-parallel \
+		--simplification=4 \
+		--minimum-zoom=5 \
+		--maximum-zoom=7 \
+		--drop-rate=0 \
+		--name=2016-us-election-roads \
+		--output $@
+
+tiles/roads-interstate-low.mbtiles: geojson/albers/us-roads-interstate.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=us-roads:geojson/albers/us-roads-interstate.geojson \
+		--read-parallel \
+		--minimum-zoom=8 \
+		--maximum-zoom=12 \
+		--drop-rate=0 \
+		--name=2016-us-election-roads \
+		--output $@
+
+tiles/roads-federal.mbtiles: geojson/albers/us-roads-federal.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=us-roads:geojson/albers/us-roads-federal.geojson \
+		--read-parallel \
+		--minimum-zoom=8 \
+		--maximum-zoom=12 \
+		--drop-rate=0 \
+		--name=2016-us-election-roads \
+		--output $@
+
+tiles/us-roads.mbtiles: tiles/roads-interstate-low.mbtiles tiles/roads-interstate-high.mbtiles tiles/roads-federal.mbtiles
+	tile-join -f -o $@ tiles/roads-interstate-low.mbtiles tiles/roads-interstate-high.mbtiles tiles/roads-federal.mbtiles
+
+tiles/road-factory:
+	make tiles/roads-interstate-high.mbtiles
+	make tiles/roads-interstate-low.mbtiles
+	make tiles/roads-federal.mbtiles
+	make tiles/us-roads.mbtiles
 
 # Usage:
 # TILESET=accountname.tilesetname make upload/tiles-filename
