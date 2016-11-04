@@ -336,7 +336,7 @@ tiles/election-state-labels.mbtiles: geojson/albers/state-labels.geojson \
 		--no-polygon-splitting \
 		--drop-rate=0 \
 		--name=2016-us-election-labels \
-		--buffer 20 \
+		--buffer 128 \
 		--output $@
 
 tiles/%-z0-1.mbtiles: geojson/albers/us-smallest/%.geojson
@@ -443,7 +443,7 @@ upload-all:
 	./upload washingtonpost.ds-2016-election-districts16-v1 tiles/election-districts_115.mbtiles
 	./upload washingtonpost.ds-2016-election-counties-v1 tiles/election-counties.mbtiles
 	./upload washingtonpost.ds-2016-election-states-v1 tiles/election-states.mbtiles
-	./upload washingtonpost.ds-2016-election-state-labels-v3 tiles/election-state-labels.mbtiles
+	./upload washingtonpost.ds-2016-election-state-labels-v4 tiles/election-state-labels.mbtiles
 	./upload washingtonpost.ds-2016-election-cartogram-v3 tiles/election-cartogram.mbtiles
 	./upload washingtonpost.ds-2016-election-centroids-v4 tiles/election-centroids.mbtiles
 	./upload washingtonpost.ds-2016-election-city-labels-v8 tiles/election-city-labels.mbtiles
