@@ -36,6 +36,17 @@ geojson/districts.geojson: shp/us/congress-clipped.shp
 geojson/precincts:
 	aws s3 sync s3://wapo-precincts/geojson $@
 
+# Use to fetch:
+# - counties_2016
+# - districts_115
+# - us-roads-federal
+# - us-roads-interstate
+# - us-roads-states
+geojson/edited-geojsons:
+	aws s3 sync s3://wapo-election-tiles/geojson-files $@
+	for f in $$(ls geojson/edited-geojsons) ; do mv geojson/edited-geojsons/$$f geojson/$$(basename $$f); done
+	rm -r geojson/edited-geojsons
+
 geojson/precincts.ndjson: geojson/precincts
 	cat geojson/precincts/DC.geojson \
 		| sed 's/Precinct/precinct/g' \
