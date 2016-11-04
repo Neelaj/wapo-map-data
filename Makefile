@@ -110,7 +110,7 @@ geojson/us-10m-factory:
 	make geojson/us-10m/districts_115.geojson
 	for f in $$(ls geojson/us-10m) ; do mv geojson/us-10m/$$f geojson/us-10m/$$(basename $$f .json).geojson; done
 
-geojson/us-lowzoom-factory: 
+geojson/us-lowzoom-factory:
 	make geojson/us-lowzoom/states.geojson
 	make geojson/us-lowzoom/counties.geojson
 	make geojson/us-lowzoom/districts.geojson
@@ -179,7 +179,7 @@ geojson/albers/state-bounds.json: geojson/albers/states.geojson
 
 # Separate asset needed by wapo-components
 geojson/albers/tile-index.json: geojson/albers/us-10m
-	cat $^/states.geojson geojson/cartogram/boundaries.geojson \
+	cat $^/states.geojson geojson/cartogram/boundaries.geojson geojson/albers/state-label-callouts.geojson \
 		| ./reproject-geojson --projection mercator --reverse \
 		| node_modules/.bin/tile-index -z 5 -f indexed > $@
 
@@ -391,7 +391,7 @@ tiles/%-z7-12.mbtiles: geojson/albers/us-10m/%.geojson
 		--name=2016-us-election-$* \
 		--output $@
 
-tiles/states: 
+tiles/states:
 	make tiles/states-z0-1.mbtiles
 	make tiles/states-z2-3.mbtiles
 	make tiles/states-z4-6.mbtiles
@@ -403,20 +403,20 @@ tiles/counties:
 	make tiles/counties-z4-6.mbtiles
 	make tiles/counties-z7-12.mbtiles
 
-tiles/districts: 
+tiles/districts:
 	make tiles/districts-z0-1.mbtiles
 	make tiles/districts-z2-3.mbtiles
 	make tiles/districts-z4-6.mbtiles
 	make tiles/districts-z7-12.mbtiles
 
-tiles/districts_115: 
+tiles/districts_115:
 	make tiles/districts_115-z0-1.mbtiles
 	make tiles/districts_115-z2-3.mbtiles
 	make tiles/districts_115-z4-6.mbtiles
 	make tiles/districts_115-z7-12.mbtiles
 
 tiles/precincts:
-	make tiles/precincts-z7-12.mbtiles	
+	make tiles/precincts-z7-12.mbtiles
 
 tiles/election-%.mbtiles: tiles/%-z0-1.mbtiles tiles/%-z2-3.mbtiles tiles/%-z4-6.mbtiles tiles/%-z7-12.mbtiles
 	tile-join -f -o $@ tiles/$*-z0-1.mbtiles tiles/$*-z2-3.mbtiles tiles/$*-z4-6.mbtiles tiles/$*-z7-12.mbtiles
