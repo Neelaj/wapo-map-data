@@ -8,10 +8,13 @@ KEY="map-data/$TILESET.mbtiles"
 
 if [[ -z $FORCE_UPLOAD ]]; then
   if aws s3api head-object --bucket $BUCKET --key $KEY; then
-    echo $KEY already exists in S3 bucket $BUCKET. Aborting.
-    exit 1
+    echo $KEY already exists in S3 bucket $BUCKET. Skipping.
+    exit
   fi
 fi
 
-node_modules/.bin/mapbox-upload $TILESET $FILENAME
+if [[ -z $SKIP_MAPBOX ]]; then
+  node_modules/.bin/mapbox-upload $TILESET $FILENAME
+fi
+
 aws s3 cp $FILENAME "s3://$BUCKET/$KEY"

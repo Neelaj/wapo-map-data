@@ -268,11 +268,17 @@ geojson/albers/city-labels.geojson:
 				name:name \
 		> $@
 
-tiles/merged.mbtiles: tiles/election.mbtiles \
+tiles/merged.mbtiles: tiles/election-districts.mbtiles \
+	tiles/election-districts_115.mbtiles \
+	tiles/election-counties.mbtiles \
+	tiles/election-states.mbtiles \
+	tiles/election-state-labels.mbtiles \
+	tiles/election-cartogram.mbtiles \
 	tiles/election-centroids.mbtiles \
 	tiles/election-city-labels.mbtiles
 	tile-join -fo $@ $^
-	echo "Merged tiles built as $@.  Upload this file to s3://wapo-election-tiles/merged-vX.mbtiles, and then update wapo-components/build_scripts/build-screenshotter.sh to point to the new version."
+	echo "Merged tiles built. Please upload with the following command and then update the version number in wapo-components/build_scripts/build-screenshotter.sh."
+	echo SKIP_MAPBOX=1 ./upload merged-v7 tiles/merged.mbtiles
 
 tiles/election-centroids.mbtiles: geojson/albers/centroid-states.geojson \
 	geojson/albers/centroid-counties.geojson \
@@ -328,9 +334,9 @@ tiles/election-state-labels.mbtiles: geojson/albers/state-labels.geojson \
 		--named-layer=state-label-callouts:geojson/albers/state-label-callouts.geojson \
 		--read-parallel \
 		--no-polygon-splitting \
-		--maximum-zoom=1 \
 		--drop-rate=0 \
 		--name=2016-us-election-labels \
+		--buffer 20 \
 		--output $@
 
 tiles/%-z0-1.mbtiles: geojson/albers/us-smallest/%.geojson
@@ -431,6 +437,16 @@ ifndef TILESET
 endif
 	./upload $(TILESET) $^
 
+
+upload-all:
+	./upload washingtonpost.ds-2016-election-districts-v1 tiles/election-districts.mbtiles
+	./upload washingtonpost.ds-2016-election-districts16-v1 tiles/election-districts_115.mbtiles
+	./upload washingtonpost.ds-2016-election-counties-v1 tiles/election-counties.mbtiles
+	./upload washingtonpost.ds-2016-election-states-v1 tiles/election-states.mbtiles
+	./upload washingtonpost.ds-2016-election-state-labels-v3 tiles/election-state-labels.mbtiles
+	./upload washingtonpost.ds-2016-election-cartogram-v3 tiles/election-cartogram.mbtiles
+	./upload washingtonpost.ds-2016-election-centroids-v4 tiles/election-centroids.mbtiles
+	./upload washingtonpost.ds-2016-election-city-labels-v8 tiles/election-city-labels.mbtiles
 
 #
 # State legislative districts
