@@ -509,6 +509,7 @@ upload-all:
 	./upload washingtonpost.ds-2016-election-cartogram-v3 tiles/election-cartogram.mbtiles
 	./upload washingtonpost.ds-2016-election-centroids-v4 tiles/election-centroids.mbtiles
 	./upload washingtonpost.ds-2016-election-city-labels-v8 tiles/election-city-labels.mbtiles
+	./upload washingtonpost.ds-2016-election-us-roads tiles/us-roads.mbtiles
 
 #
 # State legislative districts
