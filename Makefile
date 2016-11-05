@@ -135,6 +135,19 @@ geojson/us-smallest-factory:
 	make geojson/us-smallest/districts_115.geojson
 	for f in $$(ls geojson/us-smallest) ; do mv geojson/us-smallest/$$f geojson/us-smallest/$$(basename $$f .json).geojson; done
 
+geojson/reduced-roads/us-roads-interstate.geojson: geojson/us-roads-interstate.geojson
+	mkdir -p geojson/reduced-roads
+	node_modules/.bin/topojson \
+		-o $(dir $@)temp.json \
+		--no-pre-quantization \
+		--post-quantization=1e6 \
+		--simplify=3e-5 \
+		--properties class\
+		-- $^
+	node_modules/.bin/topojson-geojson -o geojson/reduced-roads geojson/reduced-roads/temp.json
+	rm geojson/reduced-roads/temp.json
+
+
 #
 # Albers
 #
@@ -215,14 +228,8 @@ geojson/cartogram/%.geojson: data/cartogram/%.geojson
 		| ./reproject-geojson --projection mercator \
 		> $@
 
-# Reproject Roads
-geojson/albers/us-roads-interstate.geojson: geojson/us-roads-interstate.geojson
-	mkdir -p $(dir $@)
-	cat $^ \
-		| ./reproject-geojson \
-		> $@
-
-geojson/albers/us-roads-federal.geojson: geojson/us-roads-federal.geojson
+# Use for roads, 
+geojson/albers/%.geojson: geojson/%.geojson
 	mkdir -p $(dir $@)
 	cat $^ \
 		| ./reproject-geojson \
@@ -458,9 +465,22 @@ tiles/roads-interstate-high.mbtiles: geojson/albers/us-roads-interstate.geojson
 		-f \
 		--named-layer=us-roads:geojson/albers/us-roads-interstate.geojson \
 		--read-parallel \
-		--simplification=4 \
+		--simplification=10 \
 		--minimum-zoom=5 \
-		--maximum-zoom=7 \
+		--maximum-zoom=6 \
+		--drop-rate=0 \
+		--name=2016-us-election-roads \
+		--output $@
+
+tiles/roads-interstate-med.mbtiles: geojson/albers/us-roads-interstate.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=us-roads:geojson/albers/us-roads-interstate.geojson \
+		--read-parallel \
+		--simplification=2 \
+		--minimum-zoom=7 \
+		--maximum-zoom=8 \
 		--drop-rate=0 \
 		--name=2016-us-election-roads \
 		--output $@
@@ -471,17 +491,18 @@ tiles/roads-interstate-low.mbtiles: geojson/albers/us-roads-interstate.geojson
 		-f \
 		--named-layer=us-roads:geojson/albers/us-roads-interstate.geojson \
 		--read-parallel \
-		--minimum-zoom=8 \
+		--simplification=1 \
+		--minimum-zoom=9 \
 		--maximum-zoom=12 \
 		--drop-rate=0 \
 		--name=2016-us-election-roads \
 		--output $@
 
-tiles/roads-federal.mbtiles: geojson/albers/us-roads-federal.geojson
+tiles/roads-%.mbtiles: geojson/albers/us-roads-%.geojson
 	mkdir -p $(dir $@)
 	tippecanoe --projection EPSG:3857 \
 		-f \
-		--named-layer=us-roads:geojson/albers/us-roads-federal.geojson \
+		--named-layer=us-roads:geojson/albers/us-roads-$*.geojson \
 		--read-parallel \
 		--minimum-zoom=8 \
 		--maximum-zoom=12 \
@@ -489,13 +510,16 @@ tiles/roads-federal.mbtiles: geojson/albers/us-roads-federal.geojson
 		--name=2016-us-election-roads \
 		--output $@
 
-tiles/us-roads.mbtiles: tiles/roads-interstate-low.mbtiles tiles/roads-interstate-high.mbtiles tiles/roads-federal.mbtiles
-	tile-join -f -o $@ tiles/roads-interstate-low.mbtiles tiles/roads-interstate-high.mbtiles tiles/roads-federal.mbtiles
+tiles/us-roads.mbtiles: tiles/roads-interstate-low.mbtiles tiles/roads-interstate-med.mbtiles tiles/roads-interstate-high.mbtiles tiles/roads-federal.mbtiles tiles/roads-state.mbtiles tiles/roads-cities.mbtiles
+	tile-join -f -o $@ tiles/roads-interstate-low.mbtiles tiles/roads-interstate-med.mbtiles tiles/roads-interstate-high.mbtiles tiles/roads-federal.mbtiles tiles/roads-state.mbtiles tiles/roads-cities.mbtiles
 
 tiles/road-factory:
 	make tiles/roads-interstate-high.mbtiles
+	make tiles/roads-interstate-med.mbtiles
 	make tiles/roads-interstate-low.mbtiles
 	make tiles/roads-federal.mbtiles
+	make tiles/roads-cities.mbtiles
+	make tiles/roads-state.mbtiles
 	make tiles/us-roads.mbtiles
 
 # Usage:
@@ -510,7 +534,6 @@ ifndef TILESET
 endif
 	./upload $(TILESET) $^
 
-
 upload-all:
 	./upload washingtonpost.ds-2016-election-districts-v1 tiles/election-districts.mbtiles
 	./upload washingtonpost.ds-2016-election-districts16-v1 tiles/election-districts_115.mbtiles
@@ -520,7 +543,7 @@ upload-all:
 	./upload washingtonpost.ds-2016-election-cartogram-v3 tiles/election-cartogram.mbtiles
 	./upload washingtonpost.ds-2016-election-centroids-v4 tiles/election-centroids.mbtiles
 	./upload washingtonpost.ds-2016-election-city-labels-v8 tiles/election-city-labels.mbtiles
-	./upload washingtonpost.ds-2016-election-us-roads tiles/us-roads.mbtiles
+	./upload washingtonpost.ds-2016-election-us-roads-v2 tiles/us-roads.mbtiles
 
 #
 # State legislative districts
