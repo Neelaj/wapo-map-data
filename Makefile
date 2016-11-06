@@ -115,6 +115,7 @@ geojson/us-smallest/%: geojson/%
 
 geojson/us-10m-factory:
 	make geojson/us-10m/counties.geojson
+	make geojson/us-10m/counties_2016.geojson
 	make geojson/us-10m/states.geojson
 	make geojson/us-10m/precincts.geojson
 	make geojson/us-10m/districts.geojson
@@ -124,6 +125,7 @@ geojson/us-10m-factory:
 geojson/us-lowzoom-factory:
 	make geojson/us-lowzoom/states.geojson
 	make geojson/us-lowzoom/counties.geojson
+	make geojson/us-lowzoom/counties_2016.geojson
 	make geojson/us-lowzoom/districts.geojson
 	make geojson/us-lowzoom/districts_115.geojson
 	for f in $$(ls geojson/us-lowzoom) ; do mv geojson/us-lowzoom/$$f geojson/us-lowzoom/$$(basename $$f .json).geojson; done
@@ -131,6 +133,7 @@ geojson/us-lowzoom-factory:
 geojson/us-smallest-factory:
 	make geojson/us-smallest/states.geojson
 	make geojson/us-smallest/counties.geojson
+	make geojson/us-smallest/counties_2016.geojson
 	make geojson/us-smallest/districts.geojson
 	make geojson/us-smallest/districts_115.geojson
 	for f in $$(ls geojson/us-smallest) ; do mv geojson/us-smallest/$$f geojson/us-smallest/$$(basename $$f .json).geojson; done
@@ -162,6 +165,7 @@ geojson/albers/%.geojson: geojson/%.geojson
 geojson/albers/us-10m: geojson/us-10m
 	make geojson/albers/us-10m/states.geojson
 	make geojson/albers/us-10m/counties.geojson
+	make geojson/albers/us-10m/counties_2016.geojson
 	make geojson/albers/us-10m/districts.geojson
 	make geojson/albers/us-10m/districts_115.geojson
 	make geojson/albers/us-10m/precincts.geojson
@@ -169,12 +173,14 @@ geojson/albers/us-10m: geojson/us-10m
 geojson/albers/us-lowzoom: geojson/us-lowzoom
 	make geojson/albers/us-lowzoom/states.geojson
 	make geojson/albers/us-lowzoom/counties.geojson
+	make geojson/albers/us-lowzoom/counties_2016.geojson
 	make geojson/albers/us-lowzoom/districts.geojson
 	make geojson/albers/us-lowzoom/districts_115.geojson
 
 geojson/albers/us-smallest: geojson/us-smallest
 	make geojson/albers/us-smallest/states.geojson
 	make geojson/albers/us-smallest/counties.geojson
+	make geojson/albers/us-smallest/counties_2016.geojson
 	make geojson/albers/us-smallest/districts.geojson
 	make geojson/albers/us-smallest/districts_115.geojson
 
@@ -229,11 +235,11 @@ geojson/cartogram/%.geojson: data/cartogram/%.geojson
 		> $@
 
 # Use for roads, 
-geojson/albers/%.geojson: geojson/%.geojson
-	mkdir -p $(dir $@)
-	cat $^ \
-		| ./reproject-geojson \
-		> $@
+# geojson/albers/%.geojson: geojson/%.geojson
+# 	mkdir -p $(dir $@)
+# 	cat $^ \
+# 		| ./reproject-geojson \
+# 		> $@
 
 geojson/cartogram:
 	make geojson/cartogram/boundaries.geojson
@@ -433,6 +439,12 @@ tiles/counties:
 	make tiles/counties-z4-6.mbtiles
 	make tiles/counties-z7-12.mbtiles
 
+tiles/counties_2016:
+	make tiles/counties_2016-z0-1.mbtiles
+	make tiles/counties_2016-z2-3.mbtiles
+	make tiles/counties_2016-z4-6.mbtiles
+	make tiles/counties_2016-z7-12.mbtiles
+
 tiles/districts:
 	make tiles/districts-z0-1.mbtiles
 	make tiles/districts-z2-3.mbtiles
@@ -504,7 +516,7 @@ tiles/roads-%.mbtiles: geojson/albers/us-roads-%.geojson
 		-f \
 		--named-layer=us-roads:geojson/albers/us-roads-$*.geojson \
 		--read-parallel \
-		--minimum-zoom=8 \
+		--minimum-zoom=6 \
 		--maximum-zoom=12 \
 		--drop-rate=0 \
 		--name=2016-us-election-roads \
