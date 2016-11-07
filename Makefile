@@ -234,13 +234,6 @@ geojson/cartogram/%.geojson: data/cartogram/%.geojson
 		| ./reproject-geojson --projection mercator \
 		> $@
 
-# Use for roads, 
-# geojson/albers/%.geojson: geojson/%.geojson
-# 	mkdir -p $(dir $@)
-# 	cat $^ \
-# 		| ./reproject-geojson \
-# 		> $@
-
 geojson/cartogram:
 	make geojson/cartogram/boundaries.geojson
 	make geojson/cartogram/electoral-units.geojson
@@ -439,12 +432,6 @@ tiles/counties:
 	make tiles/counties-z4-6.mbtiles
 	make tiles/counties-z7-12.mbtiles
 
-tiles/counties_2016:
-	make tiles/counties_2016-z0-1.mbtiles
-	make tiles/counties_2016-z2-3.mbtiles
-	make tiles/counties_2016-z4-6.mbtiles
-	make tiles/counties_2016-z7-12.mbtiles
-
 tiles/districts:
 	make tiles/districts-z0-1.mbtiles
 	make tiles/districts-z2-3.mbtiles
@@ -466,6 +453,69 @@ tiles/election-%.mbtiles: tiles/%-z0-1.mbtiles tiles/%-z2-3.mbtiles tiles/%-z4-6
 tile-factory-%:
 	make tiles/$*
 	make tiles/election-$*.mbtiles
+
+#
+# 2016 County Exception
+#
+
+tiles/counties_2016-z0-1.mbtiles: geojson/albers/us-smallest/counties_2016.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=counties:geojson/albers/us-smallest/counties_2016.geojson \
+		--read-parallel \
+		--no-polygon-splitting \
+		--maximum-zoom=1 \
+		--drop-rate=0 \
+		--name=2016-us-election-counties_2016 \
+		--output $@
+
+tiles/counties_2016-z2-3.mbtiles: geojson/albers/us-lowzoom/counties_2016.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=counties:geojson/albers/us-lowzoom/counties_2016.geojson \
+		--read-parallel \
+		--no-polygon-splitting \
+		--minimum-zoom=2 \
+		--maximum-zoom=3 \
+		--drop-rate=0 \
+		--name=2016-us-election-counties_2016 \
+		--output $@
+
+tiles/counties_2016-z4-6.mbtiles: geojson/albers/us-10m/counties_2016.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=counties:geojson/albers/counties_2016.geojson \
+		--read-parallel \
+		--no-polygon-splitting \
+		--minimum-zoom=4 \
+		--maximum-zoom=6 \
+		--drop-rate=0 \
+		--name=2016-us-election-counties_2016 \
+		--output $@
+
+
+tiles/counties_2016-z7-12.mbtiles: geojson/albers/us-10m/counties_2016.geojson
+	mkdir -p $(dir $@)
+	tippecanoe --projection EPSG:3857 \
+		-f \
+		--named-layer=counties:geojson/albers/counties_2016.geojson \
+		--read-parallel \
+		--no-polygon-splitting \
+		--minimum-zoom=7 \
+		--maximum-zoom=12 \
+		--drop-rate=0 \
+		--name=2016-us-election-counties_2016 \
+		--output $@
+
+tile-factory-counties_2016:
+	make tiles/counties_2016-z0-1.mbtiles
+	make tiles/counties_2016-z2-3.mbtiles
+	make tiles/counties_2016-z4-6.mbtiles
+	make tiles/counties_2016-z7-12.mbtiles
+	make tiles/election-counties_2016.mbtiles
 
 #
 # Roads
@@ -550,6 +600,7 @@ upload-all:
 	./upload washingtonpost.ds-2016-election-districts-v1 tiles/election-districts.mbtiles
 	./upload washingtonpost.ds-2016-election-districts16-v1 tiles/election-districts_115.mbtiles
 	./upload washingtonpost.ds-2016-election-counties-v1 tiles/election-counties.mbtiles
+	./upload washingtonpost.ds-2016-election-counties16-v2 tiles/election-counties_2016.mbtiles
 	./upload washingtonpost.ds-2016-election-states-v1 tiles/election-states.mbtiles
 	./upload washingtonpost.ds-2016-election-state-labels-v4 tiles/election-state-labels.mbtiles
 	./upload washingtonpost.ds-2016-election-cartogram-v3 tiles/election-cartogram.mbtiles
