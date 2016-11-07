@@ -504,7 +504,7 @@ tiles/roads-%.mbtiles: geojson/albers/us-roads-%.geojson
 		-f \
 		--named-layer=us-roads:geojson/albers/us-roads-$*.geojson \
 		--read-parallel \
-		--minimum-zoom=8 \
+		--minimum-zoom=6 \
 		--maximum-zoom=12 \
 		--drop-rate=0 \
 		--name=2016-us-election-roads \
